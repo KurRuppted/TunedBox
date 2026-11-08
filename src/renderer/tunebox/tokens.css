@@ -1,0 +1,255 @@
+/* ==========================================================================
+   Tunebox design tokens
+   Loaded after styles.css. Defines Tunebox's colours, type, shapes and motion,
+   then points Riff's older Material variables at them so every existing screen
+   picks up the Tunebox look. Values follow the Tunebox screenshots where they
+   differ from the Tunebox source (noted inline).
+   Light/dark: data-theme on <html>, written by tunebox/appearance.js.
+   ========================================================================== */
+
+/* ---------- Inter (bundled, variable weight; no network needed) ---------- */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../../../vendor/fonts/inter/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../../../vendor/fonts/inter/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../../../vendor/fonts/inter/inter-cyrillic-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+/* ---------- Tokens: light ---------- */
+:root {
+  --titlebar-h: 48px;
+  --tb-sidebar-w: 232px;
+  --caption-w: 140px; /* room for the native Windows minimize / maximize / close buttons */
+
+  --window: #ffffff;
+  --sidebar: #ececee;
+  --sidebar-material: rgb(255 255 255 / 0.32);
+  --text: rgb(0 0 0 / 0.85);
+  --text-2: rgb(0 0 0 / 0.52);
+  --text-3: rgb(0 0 0 / 0.28);
+  --separator: rgb(0 0 0 / 0.1);
+  --fill: rgb(0 0 0 / 0.05);
+  --fill-2: rgb(0 0 0 / 0.09);
+  --fill-strong: rgb(0 0 0 / 0.5);
+  --hover: rgb(0 0 0 / 0.045);
+  --selected: rgb(0 0 0 / 0.08);
+  --stripe: rgb(0 0 0 / 0.025);
+  --menu: rgb(246 246 246 / 0.82);
+  --toolbar: rgb(255 255 255 / 0.78);
+  --art-edge: rgb(0 0 0 / 0.08);
+  --shadow: 0 10px 30px -8px rgb(0 0 0 / 0.22), 0 0 0 0.5px rgb(0 0 0 / 0.12);
+  --danger: #d70015;
+
+  /* Opaque equivalents of the translucent tokens above, for surfaces and for code that reads colours
+     back (canvas visualizers can't use color-mix). Each is the translucent token over --window. */
+  --text-solid: #262626;
+  --text-2-solid: #7a7a7a;
+  --text-3-solid: #b8b8b8;
+  --fill-solid: #f2f2f2;
+  --fill-2-solid: #e8e8e8;
+  --hover-solid: #f5f5f5;
+  --separator-solid: #e6e6e6;
+
+  /* Accent: written by appearance.js (preset, custom colour, or the playing album). */
+  --accent: #007aff;
+  --accent-hover: #1a88ff;
+  --on-accent: #ffffff;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --font: 'Inter Variable', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --fs: 1; /* UI text size multiplier (Appearance → text size) */
+  color-scheme: light;
+}
+
+/* ---------- Tokens: dark ---------- */
+:root[data-theme='dark'],
+.dark-surface {
+  --window: #1e1e1e;
+  --sidebar: #1f1f1f; /* screenshots: Mica under a translucent sidebar renders #1f1f1f (source says #29292b) */
+  --sidebar-material: rgb(30 30 30 / 0.3);
+  --text: rgb(255 255 255 / 0.88);
+  --text-2: rgb(255 255 255 / 0.55);
+  --text-3: rgb(255 255 255 / 0.28);
+  --separator: rgb(255 255 255 / 0.1);
+  --fill: rgb(255 255 255 / 0.08);
+  --fill-2: rgb(255 255 255 / 0.13);
+  --fill-strong: rgb(255 255 255 / 0.62);
+  --hover: rgb(255 255 255 / 0.05);
+  --selected: rgb(255 255 255 / 0.1);
+  --stripe: rgb(255 255 255 / 0.025);
+  --menu: rgb(42 42 44 / 0.84);
+  --toolbar: rgb(30 30 30 / 0.78);
+  --art-edge: rgb(255 255 255 / 0.08);
+  --shadow: 0 12px 34px -8px rgb(0 0 0 / 0.6), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+  --danger: #ff6961;
+
+  --text-solid: #e4e4e4;   /* screenshots: titles #e6e6e5 */
+  --text-2-solid: #9a9a9a; /* screenshots: artist names #989898 */
+  --text-3-solid: #5d5d5d; /* screenshots: track numbers #5c5b5b */
+  --fill-solid: #303030;   /* screenshots: ghost buttons #303030 */
+  --fill-2-solid: #3b3b3b;
+  --hover-solid: #292929;
+  --separator-solid: #363636; /* screenshots: sidebar hairline #363636 */
+
+  /* Dark screens inside a light window use the accent's dark shade. */
+  --accent: var(--accent-dark, #0a84ff);
+  --accent-hover: color-mix(in srgb, var(--accent-dark, #0a84ff) 85%, white);
+  --on-accent: var(--on-accent-dark, #ffffff);
+  color-scheme: dark;
+}
+.dark-surface { color: var(--text); }
+
+/* The accent glides to its new colour, which matters when it follows the album that's playing. */
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #007aff; }
+@property --accent-dark { syntax: '<color>'; inherits: true; initial-value: #0a84ff; }
+html { transition: --accent 0.8s var(--ease), --accent-dark 0.8s var(--ease); }
+
+/* ---------- Riff's variables, pointed at Tunebox ----------
+   Riff's own stylesheet uses Material variables everywhere; mapping them here restyles every
+   existing screen at once. Later stages replace those screens with Tunebox components. */
+:root,
+:root[data-theme='dark'] {
+  --md-sys-color-background: var(--sidebar);
+  --md-sys-color-background-solid: var(--sidebar);
+  --md-sys-color-surface: var(--window);
+  --md-sys-color-surface-solid: var(--window);
+  --md-sys-color-surface-dim: var(--window);
+  --md-sys-color-surface-dim-solid: var(--window);
+  --md-sys-color-surface-bright: var(--fill-2-solid);
+  --md-sys-color-surface-bright-solid: var(--fill-2-solid);
+  --md-sys-color-surface-variant: var(--fill-solid);
+  --md-sys-color-surface-container-lowest: var(--window);
+  --md-sys-color-surface-container-lowest-solid: var(--window);
+  --md-sys-color-surface-container-low: var(--window);
+  --md-sys-color-surface-container-low-solid: var(--window);
+  --md-sys-color-surface-container: var(--sidebar);
+  --md-sys-color-surface-container-solid: var(--sidebar);
+  --md-sys-color-surface-container-high: var(--fill-solid);
+  --md-sys-color-surface-container-high-solid: var(--fill-solid);
+  --md-sys-color-surface-container-highest: var(--fill-2-solid);
+  --md-sys-color-surface-container-highest-solid: var(--fill-2-solid);
+
+  --md-sys-color-on-surface: var(--text);
+  --md-sys-color-on-surface-solid: var(--text-solid);
+  --md-sys-color-on-surface-variant: var(--text-2);
+  --md-sys-color-on-surface-variant-solid: var(--text-2-solid);
+  --md-sys-color-outline: var(--text-3);
+  --md-sys-color-outline-variant: var(--separator);
+
+  --md-sys-color-primary: var(--accent);
+  --md-sys-color-on-primary: var(--on-accent);
+  --md-sys-color-primary-container: color-mix(in srgb, var(--accent) 20%, var(--window));
+  --md-sys-color-on-primary-container: var(--text);
+  --md-sys-color-secondary: var(--text-2);
+  --md-sys-color-secondary-container: var(--fill-2-solid);
+  --md-sys-color-on-secondary-container: var(--text);
+  --md-sys-color-tertiary: var(--accent);
+  --md-sys-color-tertiary-container: color-mix(in srgb, var(--accent) 16%, var(--window));
+  --md-sys-color-error: var(--danger);
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: color-mix(in srgb, var(--danger) 16%, var(--window));
+  --md-sys-color-on-error-container: var(--danger);
+
+  --btn-primary-bg: var(--accent);
+  --btn-primary-fg: var(--on-accent);
+  --btn-primary-hover: var(--accent-hover);
+
+  /* Tunebox's radius scale: 4 thumbnails, 6 rows, 8 cards, 10 menus, 14 the player bar and sheets. */
+  --md-shape-corner-xs: 4px;
+  --md-shape-corner-s: 6px;
+  --md-shape-corner-m: 8px;
+  --md-shape-corner-medium: 8px;
+  --md-shape-corner-l: 10px;
+  --md-shape-corner-xl: 14px;
+  --md-shape-corner-extra: 14px;
+  --md-shape-corner-full: 9999px;
+
+  /* One easing curve everywhere; short, quiet durations. */
+  --transition-hover: 120ms var(--ease);
+  --transition-hover-out: 120ms var(--ease);
+  --transition-fast: 120ms var(--ease);
+  --transition-short: 150ms var(--ease);
+  --transition-normal: 180ms var(--ease);
+  --transition-m: 220ms var(--ease);
+  --transition-m3: 220ms var(--ease);
+  --transition-emphasized: 300ms var(--ease);
+  --transition-jelly: 300ms var(--ease);
+
+  --font-family: var(--font);
+  --svg-stroke-w: 1.8px;
+}
+
+/* Riff's page and panel surfaces (sidebar, player bar) are a second layer of variables, set on <body>.
+   Content sits on the window colour; sidebar and player bar on the sidebar colour, as in Tunebox.
+   A video background keeps Riff's see-through surfaces. */
+:root,
+body:not(.has-video-bg),
+body:not(.has-video-bg)[data-theme] {
+  --page-solid: var(--window);
+  --page-bg: var(--window);
+  --panel-bg: var(--sidebar);
+}
+
+/* ---------- Base ---------- */
+body {
+  letter-spacing: -0.003em;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 1px;
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+/* Tunebox scrollbars: thin, always there, inset from the edge. */
+::-webkit-scrollbar { width: 12px; height: 12px; background: transparent; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--text-3);
+  border-radius: 6px;
+  border: 3.5px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--text-2); }
+
+/* Album tint: a soft wash of the playing cover's colours (Appearance → Album theme). */
+.album-tint {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.2; animation: fade-in 0.8s var(--ease);
+  background:
+    radial-gradient(70% 60% at 0% 0%, var(--tint-1), transparent 70%),
+    radial-gradient(60% 60% at 100% 10%, var(--tint-2), transparent 70%),
+    radial-gradient(80% 60% at 50% 110%, var(--tint-3), transparent 70%);
+}
+:root[data-theme='dark'] .album-tint { opacity: 0.26; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { transition: none; }
+}
+
+/* ---------- Shared animations ---------- */
+@keyframes pop-in { from { opacity: 0; transform: scale(0.97); } }
+@keyframes breathe { 50% { transform: scale(1.12); } }
+@keyframes eq { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }

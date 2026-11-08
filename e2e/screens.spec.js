@@ -71,4 +71,17 @@ test('capture screens', async () => {
   await page.locator('#btn-toggle-lyrics-panel').click();
   await shot('08-lyrics-panel');
   await page.locator('#btn-toggle-lyrics-panel').click();
+
+  // The light theme, when the Tunebox look is present (stage 2 onwards).
+  const hasTunebox = await page.evaluate(() => !!(window.Tunebox && window.Tunebox.appearance));
+  if (hasTunebox) {
+    await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'light' }));
+    await go('nav-discover');
+    await shot('11-light-home');
+    await go('nav-local');
+    await shot('12-light-local-files');
+    await go('nav-settings');
+    await shot('13-light-settings');
+    await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'dark' }));
+  }
 });

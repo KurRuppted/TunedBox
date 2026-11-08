@@ -154,6 +154,9 @@ try { window.electronAPI.storageSaveSync(diskMap); } catch (_) {}
 });
 })();
 
+// Tunebox look: read its saved settings now that Riff's disk storage is in place (tunebox/appearance.js).
+try { if (window.Tunebox && window.Tunebox.appearance) window.Tunebox.appearance.init(); } catch (e) { console.warn('[tunebox] init', e); }
+
 (() => {
   try {
     if (typeof window === 'undefined' || window.__riffFetchPatched) return;
@@ -1941,8 +1944,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function applyTheme(hexColor, mode, intensity = state.themeIntensity, brightness = state.themeBrightness, accent2 = null, isAuto = false) {
+    // Tunebox owns light/dark and the colours (tunebox/appearance.js + tokens.css); Riff's generated
+    // Material palette only runs if the Tunebox layer is missing.
+    const tunebox = window.Tunebox && window.Tunebox.appearance;
+    if (tunebox) {
+      mode = tunebox.effectiveMode();
+      tunebox.refresh();
+      ['--md-sys-color-primary', '--md-sys-color-background', '--md-sys-color-surface'].forEach((p) => {
+        document.documentElement.style.removeProperty(p);
+        document.documentElement.style.removeProperty(p + '-solid');
+      });
+    }
     currentEffectiveMode = mode;
-    generateM3Palette(hexColor, mode, intensity, brightness);
+    if (!tunebox) generateM3Palette(hexColor, mode, intensity, brightness);
     const themeAccent = document.documentElement.style.getPropertyValue('--md-sys-color-primary')?.trim() || hexColor;
     applyButtonAccent(themeAccent, mode, intensity < 8);
     document.body.classList.toggle('theme-light', mode === 'light');
@@ -1986,6 +2000,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mono = intensity < 8;
     updateMeshGradient(mono ? '#9E9E9E' : hexColor, mono ? '#757575' : resolvedAccent2, mode);
     refreshCachedThemeColors();
+  }
+
+  // When the Tunebox look changes (light/dark, accent, the system theme), refresh Riff's theme classes too.
+  if (window.Tunebox && window.Tunebox.appearance) {
+    window.Tunebox.appearance.subscribe(() => {
+      if (document.body.getAttribute('data-theme') !== window.Tunebox.appearance.effectiveMode()) updateThemeFromState();
+    });
   }
 
   function updateThemeFromState() {
@@ -18369,9 +18390,11 @@ function bindCoverHoldZoom(wrapEl) {
     '#btn-sb-new-playlist svg': 'playlist_add'
   };
 
+  if (window.Tunebox && window.Tunebox.icons) ICON_PACKS.tunebox = window.Tunebox.icons.pack;
+
   function applyIconPack(pack) {
-    const validPacks = ['material', 'material-rounded', 'material-filled', 'material-sharp', 'sf', 'lucide', 'solar'];
-    if (!validPacks.includes(pack)) pack = 'material';
+    const validPacks = ['tunebox', 'material', 'material-rounded', 'material-filled', 'material-sharp', 'sf', 'lucide', 'solar'];
+    if (!validPacks.includes(pack) || (pack === 'tunebox' && !ICON_PACKS.tunebox)) pack = 'material';
     document.body.setAttribute('data-icon-pack', pack);
 
     const msFont = pack === 'material-sharp' ? "'Material Symbols Sharp'" : (pack === 'material' ? "'Material Symbols Outlined'" : "'Material Symbols Rounded'");
@@ -18391,7 +18414,8 @@ function bindCoverHoldZoom(wrapEl) {
     const allSelectors = new Set([
       ...Object.keys(ICON_PACKS.sf),
       ...Object.keys(ICON_PACKS.lucide),
-      ...Object.keys(ICON_PACKS.solar)
+      ...Object.keys(ICON_PACKS.solar),
+      ...Object.keys(ICON_PACKS.tunebox || {})
     ]);
 
     allSelectors.forEach(sel => {
@@ -18400,14 +18424,9 @@ function bindCoverHoldZoom(wrapEl) {
       if (!elSvg.dataset.origSvg) {
         elSvg.dataset.origSvg = elSvg.innerHTML;
       }
-      if (pack.startsWith('material')) {
-        elSvg.innerHTML = elSvg.dataset.origSvg;
-      } else {
-        const packDef = ICON_PACKS[pack];
-        if (packDef && packDef[sel]) {
-          elSvg.innerHTML = packDef[sel];
-        }
-      }
+      const packDef = pack.startsWith('material') ? null : ICON_PACKS[pack];
+      // Icons a pack doesn't redraw go back to Riff's original drawing.
+      elSvg.innerHTML = packDef && packDef[sel] ? packDef[sel] : elSvg.dataset.origSvg;
     });
 
                                                                    
@@ -18463,7 +18482,8 @@ function bindCoverHoldZoom(wrapEl) {
     }
 
     const packLabels = {
-      material: 'Material Outlined (Default)',
+      tunebox: 'Tunebox (Default)',
+      material: 'Material Outlined',
       'material-rounded': 'Material Symbols Rounded',
       'material-filled': 'Material Symbols Filled',
       'material-sharp': 'Material Symbols Sharp',
@@ -18516,7 +18536,9 @@ function bindCoverHoldZoom(wrapEl) {
     });
   }
 
-  const savedIconPack = localStorage.getItem('riff_icon_pack') || 'material';
+  // Tunebox icons are the default. Riff's defaults.json seeds riff_icon_pack for every new install, so a
+  // pack someone actually picks is remembered under tunebox.iconPack instead.
+  const savedIconPack = localStorage.getItem('tunebox.iconPack') || 'tunebox';
   applyIconPack(savedIconPack);
 
   const iconPackDropdown = document.getElementById('icon-pack-dropdown');
@@ -18538,6 +18560,7 @@ function bindCoverHoldZoom(wrapEl) {
           localStorage.setItem('riff_icon_fill', '0');
         }
         localStorage.setItem('riff_icon_pack', val);
+        localStorage.setItem('tunebox.iconPack', val);
         applyIconPack(val);
         iconPackDropdown.classList.remove('open');
       });
@@ -18566,6 +18589,7 @@ function bindCoverHoldZoom(wrapEl) {
         if (valIconRoundness) valIconRoundness.textContent = 'Rounded';
       }
       localStorage.setItem('riff_icon_pack', newPack);
+      localStorage.setItem('tunebox.iconPack', newPack);
       applyIconPack(newPack);
     });
   }
@@ -18604,6 +18628,7 @@ function bindCoverHoldZoom(wrapEl) {
         newPack = 'material-rounded';
       }
       localStorage.setItem('riff_icon_pack', newPack);
+      localStorage.setItem('tunebox.iconPack', newPack);
       applyIconPack(newPack);
     });
   }
