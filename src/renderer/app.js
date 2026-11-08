@@ -2006,6 +2006,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (window.Tunebox && window.Tunebox.appearance) {
     window.Tunebox.appearance.subscribe(() => {
       if (document.body.getAttribute('data-theme') !== window.Tunebox.appearance.effectiveMode()) updateThemeFromState();
+      else syncThemeModeButtons();
     });
   }
 
@@ -2035,9 +2036,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       applyTheme(state.themeAccent, state.themeMode, state.themeIntensity, state.themeBrightness, null, false);
     }
 
-    if (el.themeModeBtns) {
-      el.themeModeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.themeMode === state.themeMode));
+    syncThemeModeButtons();
+  }
+
+  // The Light / Dark / System toggle in Settings → Theme shows the Tunebox mode (until stage 7's Appearance panel).
+  function syncThemeModeButtons() {
+    if (!el.themeModeBtns) return;
+    const tunebox = window.Tunebox && window.Tunebox.appearance;
+    if (tunebox) {
+      const mode = tunebox.get().theme;
+      el.themeModeBtns.forEach(btn => {
+        if (btn.dataset.themeMode) btn.classList.toggle('active', btn.dataset.themeMode === mode);
+      });
+      return;
     }
+    el.themeModeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.themeMode === state.themeMode));
   }
 
   const el = {
@@ -18135,6 +18148,13 @@ function bindCoverHoldZoom(wrapEl) {
   if (el.themeModeBtns) {
     el.themeModeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
+        // Temporary bridge: the old toggle sets the Tunebox mode (light, dark or follow the system).
+        const tunebox = window.Tunebox && window.Tunebox.appearance;
+        if (tunebox && ['light', 'dark', 'system'].includes(btn.dataset.themeMode)) {
+          tunebox.set({ theme: btn.dataset.themeMode });
+          syncThemeModeButtons();
+          return;
+        }
         state.themeMode = btn.dataset.themeMode;
         localStorage.setItem('riff_theme_mode', state.themeMode);
         updateThemeFromState();

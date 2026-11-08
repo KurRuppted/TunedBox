@@ -19,7 +19,7 @@
     { id: 'graphite', label: 'Graphite', light: '#8e8e93', dark: '#98989d', on: '#ffffff' }
   ];
 
-  // Fraunces and Oswald (used by the Paper and Neon themes) are not bundled yet; they fall back until they are.
+  // Fraunces (Paper theme) and Oswald (Neon theme) are bundled in vendor/fonts (tunebox/fonts.css).
   const FONTS = [
     { id: 'inter', label: 'Inter', stack: "'Inter Variable', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif" },
     { id: 'system', label: 'System', stack: "'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif" },

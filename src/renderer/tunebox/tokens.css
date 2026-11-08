@@ -208,6 +208,12 @@ body:not(.has-video-bg)[data-theme] {
   --panel-bg: var(--sidebar);
 }
 
+/* Riff theme controls that Tunebox replaced; kept in the page (app.js still finds them) but not shown.
+   The Appearance panel takes over in stage 7. */
+.tb-retired { display: none !important; }
+/* Riff dims every hint with !important; this one is a message people need to read. */
+.tb-appearance-notice .setting-hint { color: var(--text-2) !important; opacity: 1 !important; line-height: 1.45; }
+
 /* ---------- Base ---------- */
 body {
   letter-spacing: -0.003em;
