@@ -51,7 +51,8 @@ test('the Settings toggle switches the Tunebox theme', async () => {
 test('retired accent controls are hidden and the notice is shown', async () => {
   const hidden = await page.evaluate(() =>
     [...document.querySelectorAll('.tb-retired')].map((e) => getComputedStyle(e).display));
-  expect(hidden.length).toBe(6);
+  // Stage 2 retired six theme controls; stage 3 adds Classic sidebar and the Home button picture.
+  expect(hidden.length).toBeGreaterThanOrEqual(6);
   expect(new Set(hidden)).toEqual(new Set(['none']));
   // app.js still finds the controls it wires up.
   for (const id of ['slider-theme-intensity', 'slider-theme-hue', 'settings-custom-color-input', 'btn-intensity-bg']) {

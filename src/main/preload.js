@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const arg = process.argv.find((a) => a.startsWith('--riff-token='));
     return arg ? arg.slice('--riff-token='.length) : '';
   })(),
+  // Tunebox window chrome: native caption buttons / Mica info, and light or dark caption symbols.
+  tuneboxWindowInfo: () => ipcRenderer.invoke('tunebox-window-info'),
+  tuneboxSetWindowChrome: (dark, mode) => ipcRenderer.send('tunebox-window-chrome', { dark: !!dark, mode }),
   minimizeWindow: () => ipcRenderer.send('window-minimize'),
   maximizeWindow: () => ipcRenderer.send('window-maximize'),
   closeWindow: () => ipcRenderer.send('window-close'),

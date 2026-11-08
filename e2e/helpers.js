@@ -35,8 +35,10 @@ function makeProfile() {
   return { dir, ...dirs };
 }
 
-async function launchRiff({ width = 1600, height = 1000, maximize = false } = {}) {
+// seed: Riff storage keys to start with (values are strings, as Riff keeps them).
+async function launchRiff({ width = 1600, height = 1000, maximize = false, seed = null } = {}) {
   const profile = makeProfile();
+  if (seed) fs.writeFileSync(path.join(profile.userData, 'storage.json'), JSON.stringify(seed));
   // VS Code's terminal sets ELECTRON_RUN_AS_NODE, which would start Electron as plain Node.
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE'));
   Object.assign(env, {
@@ -86,6 +88,45 @@ async function closeRiff(ctx) {
   try { fs.rmSync(ctx.profile.dir, { recursive: true, force: true }); } catch (e) {}
 }
 
+// Screenshot of the window as it appears on screen. On Windows this includes what the page itself can't
+// capture: Mica behind the see-through sidebar and the native caption buttons. Elsewhere it falls back
+// to Electron's page capture.
+async function captureWindow(app, file) {
+  const info = await app.evaluate(({ BrowserWindow, screen }) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.focus();
+    const b = win.getContentBounds();
+    const scale = screen.getDisplayMatching(b).scaleFactor;
+    return { x: b.x, y: b.y, width: b.width, height: b.height, scale };
+  });
+  try {
+    if (process.platform === 'win32') {
+      await new Promise((r) => setTimeout(r, 400)); // let the window come to the front
+      const s = info.scale;
+      const [x, y, w, h] = [info.x * s, info.y * s, info.width * s, info.height * s].map(Math.round);
+      const ps = [
+        'Add-Type -AssemblyName System.Drawing',
+        // Physical pixels, whatever Windows' display scaling is.
+        'Add-Type -Name Dpi -Namespace W -MemberDefinition \'[DllImport("user32.dll")] public static extern bool SetProcessDPIAware();\'',
+        '[W.Dpi]::SetProcessDPIAware() | Out-Null',
+        `$bmp = New-Object System.Drawing.Bitmap ${w}, ${h}`,
+        '$g = [System.Drawing.Graphics]::FromImage($bmp)',
+        `$g.CopyFromScreen(${x}, ${y}, 0, 0, $bmp.Size)`,
+        `$bmp.Save('${file.replace(/'/g, "''")}', [System.Drawing.Imaging.ImageFormat]::Png)`,
+        '$g.Dispose(); $bmp.Dispose()'
+      ].join('; ');
+      require('node:child_process').execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { stdio: 'pipe' });
+    } else {
+      const png = await app.evaluate(async ({ BrowserWindow }) =>
+        (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'));
+      fs.writeFileSync(file, Buffer.from(png, 'base64'));
+    }
+  } finally {
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setAlwaysOnTop(false));
+  }
+}
+
 function audioState(page) {
   return page.evaluate(() => {
     const a = document.getElementById('native-audio');
@@ -93,4 +134,4 @@ function audioState(page) {
   });
 }
 
-module.exports = { ROOT, launchRiff, closeRiff, stubOpenDialog, writeToneWav, audioState };
+module.exports = { ROOT, launchRiff, closeRiff, stubOpenDialog, writeToneWav, audioState, captureWindow };

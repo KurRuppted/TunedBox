@@ -738,11 +738,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem('riff_adv_track_banners', 'false');
   }
 
+  // Tunebox is designed at 100% (1 CSS px = 1 px at Windows' 100% scaling). Riff drew everything at
+  // 90% of the chosen size; the Tunebox shell uses the chosen size as-is and starts everyone at 100%.
+  const tuneboxShell = document.documentElement.classList.contains('tb-shell');
+  if (tuneboxShell && localStorage.getItem('tunebox_scale_v1') !== '1') {
+    localStorage.setItem('tunebox_scale_v1', '1');
+    localStorage.setItem('devsize_ui_scale', '100');
+  }
   const savedScale = parseFloat(localStorage.getItem('devsize_ui_scale') || '105');
   applyScale(savedScale);
 
   function applyScale(scalePercent) {
-    const factor = (scalePercent / 100) * 0.90;
+    const factor = (scalePercent / 100) * (tuneboxShell ? 1 : 0.90);
     document.documentElement.style.setProperty('--app-scale', factor.toString());
     if (window.electronAPI && window.electronAPI.setZoomFactor) {
       window.electronAPI.setZoomFactor(factor);

@@ -7,7 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { test, expect } = require('@playwright/test');
-const { launchRiff, closeRiff, stubOpenDialog, writeToneWav } = require('./helpers');
+const { launchRiff, closeRiff, stubOpenDialog, writeToneWav, captureWindow } = require('./helpers');
 
 const label = process.env.RIFF_SCREENS;
 test.skip(!label, 'Set RIFF_SCREENS=<label> to capture review screenshots.');
@@ -20,15 +20,28 @@ let page;
 const go = (id) => page.evaluate((i) => document.getElementById(i).click(), id);
 const shot = async (name) => {
   await page.waitForTimeout(1200); // let transitions and images settle
-  // Electron's own capture: Riff zooms the page, which throws off Playwright's screenshot size.
-  const png = await ctx.app.evaluate(async ({ BrowserWindow }) =>
-    (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'));
-  fs.writeFileSync(path.join(outDir, `${name}.png`), Buffer.from(png, 'base64'));
+  await captureWindow(ctx.app, path.join(outDir, `${name}.png`));
 };
+
+// A small library so the sidebar has playlists to show (names like the Tunebox reference screenshots;
+// covers are generated gradients, so nothing is fetched).
+const cover = (h1, h2) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+  `<stop offset="0" stop-color="hsl(${h1} 70% 55%)"/><stop offset="1" stop-color="hsl(${h2} 65% 30%)"/></linearGradient></defs>` +
+  `<rect width="120" height="120" fill="url(#g)"/></svg>`);
+const PLAYLISTS = [
+  ['Catch', 200, 260], ['Jammin a car 🚙', 20, 340], ['Beat Ups', 280, 220], ['Khalid & Bruno Favorites', 40, 10],
+  ['Love Mix for the User', 330, 300], ['Top 50 with Delilah', 180, 120], ['Chill Walk to Work', 150, 190],
+  ['All Time Listened Songs', 100, 160], ['Anime Rap Songs', 0, 40], ['sad lofi 💔 lofi chill', 260, 300],
+  ['valorant', 350, 10], ['Just a chill guy', 210, 240], ['Vibes 🎮 🌌', 240, 280], ['Blinding Lights', 5, 30], ['Sleep 😴', 230, 250]
+].map(([name, h1, h2], i) => ({ id: `pl_seed${i}`, name, tracks: [], cover: cover(h1, h2) }));
 
 test.beforeAll(async () => {
   fs.mkdirSync(outDir, { recursive: true });
-  ctx = await launchRiff({ maximize: true });
+  ctx = await launchRiff({
+    maximize: true,
+    seed: { devsize_playlists: JSON.stringify(PLAYLISTS), riff_user_nickname: 'Solomon Vu' }
+  });
   page = ctx.page;
   const files = ['Alpha Tone', 'Beta Tone', 'Gamma Tone'].map((n, i) =>
     writeToneWav(path.join(ctx.profile.music, `${n}.wav`), { freq: 330 + i * 110 }));
@@ -63,6 +76,10 @@ test('capture screens', async () => {
   await page.locator('#search-input').press('Enter');
   await page.waitForTimeout(6000);
   await shot('06-search');
+  // Scrolled: the Tunebox toolbar turns to glass over the page.
+  await page.evaluate(() => { document.getElementById('main-content').scrollTop = 500; });
+  await shot('06b-search-scrolled');
+  await page.evaluate(() => { document.getElementById('main-content').scrollTop = 0; });
 
   await go('nav-settings');
   await shot('07-settings');
@@ -83,5 +100,26 @@ test('capture screens', async () => {
     await go('nav-settings');
     await shot('13-light-settings');
     await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'dark' }));
+  }
+
+  // The Tunebox window frame (stage 3 onwards).
+  const hasShell = await page.evaluate(() => !!document.getElementById('tb-btn-sidebar'));
+  if (hasShell) {
+    await page.keyboard.press('Escape'); // close Settings
+    await go('nav-discover');
+
+    await page.locator('#tb-btn-sidebar').click();
+    await shot('15-sidebar-hidden');
+    await page.locator('#tb-btn-sidebar').click();
+
+    await page.locator('#btn-sb-create-pill').click();
+    await shot('16-new-playlist-menu');
+    await page.evaluate(() => document.getElementById('sb-create-popover').classList.add('hidden'));
+
+    await go('btn-mini-player');
+    await page.waitForTimeout(2000); // the window shrinks to the mini player
+    await shot('17-mini-player');
+    await go('btn-mini-player');
+    await page.waitForTimeout(2000);
   }
 });

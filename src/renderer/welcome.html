@@ -2132,6 +2132,12 @@
     document.getElementById('winControls').classList.toggle('no-api', !(bridge.api && bridge.api.closeWindow));
     // macOS shows native traffic lights instead.
     if (bridge.api && bridge.api.platform === 'darwin') document.getElementById('winControls').style.display = 'none';
+    // Windows draws its own caption buttons in the Tunebox window.
+    if (bridge.api && bridge.api.tuneboxWindowInfo) {
+      bridge.api.tuneboxWindowInfo().then((info) => {
+        if (info && info.nativeControls) document.getElementById('winControls').style.display = 'none';
+      }, () => {});
+    }
     document.getElementById('winMinBtn').addEventListener('click', () => {
       if (bridge.api && bridge.api.minimizeWindow) bridge.api.minimizeWindow();
     });

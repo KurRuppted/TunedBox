@@ -369,6 +369,37 @@ function runGUI() {
     }
   }
 
+  // ---- Tunebox window chrome ----
+  const TB_TITLEBAR_H = 48;
+  function tuneboxWindowChrome() {
+    const nativeControls = process.platform === 'win32';
+    // Mica through backgroundMaterial needs Windows 11 22H2 (build 22621) or later.
+    const build = nativeControls ? parseInt(String(os.release()).split('.')[2] || '0', 10) : 0;
+    const material = nativeControls && build >= 22621 && process.env.RIFF_NO_MICA !== '1';
+    return { nativeControls, material, titlebarHeight: TB_TITLEBAR_H };
+  }
+  // Transparent strip so the page shows through; symbols turn light on dark pages and dark on light ones.
+  function tuneboxOverlay(dark, height = TB_TITLEBAR_H) {
+    return { color: '#00000000', symbolColor: dark ? '#ffffff' : '#1d1d1f', height };
+  }
+  let tbOverlayDark = true;
+  function applyTuneboxOverlay() {
+    if (!mainWindow || mainWindow.isDestroyed() || !tuneboxWindowChrome().nativeControls) return;
+    // The mini player is a small always-on-top window; keep its caption buttons compact.
+    try { mainWindow.setTitleBarOverlay(tuneboxOverlay(tbOverlayDark, isMiniWindow ? 32 : TB_TITLEBAR_H)); } catch (_) {}
+  }
+  ipcMain.removeHandler('tunebox-window-info');
+  ipcMain.handle('tunebox-window-info', () => tuneboxWindowChrome());
+  ipcMain.on('tunebox-window-chrome', (e, opts) => {
+    tbOverlayDark = !!(opts && opts.dark);
+    // Mica (and native menus) follow the app's light / dark / system choice, not just Windows'.
+    const mode = opts && opts.mode;
+    if (['light', 'dark', 'system'].includes(mode)) {
+      try { require('electron').nativeTheme.themeSource = mode; } catch (_) {}
+    }
+    applyTuneboxOverlay();
+  });
+
   async function createWindow() {
     serverPort = await startServer(PORT);
     const firstRun = !tutorialDone();
@@ -378,6 +409,9 @@ function runGUI() {
     const primaryDisplay = screen.getPrimaryDisplay();
     const scaleFactor = primaryDisplay.scaleFactor;
 
+    // Tunebox window: on Windows the system draws the minimize / maximize / close buttons over a 48px
+    // title bar (the page leaves room for them), and Windows 11 22H2+ shows Mica behind the sidebar.
+    const tbChrome = tuneboxWindowChrome();
     mainWindow = new BrowserWindow({
       x: initialBounds.x,
       y: initialBounds.y,
@@ -385,12 +419,14 @@ function runGUI() {
       height: initialBounds.height,
       minWidth: 800,
       minHeight: 540,
-                                   backgroundColor: firstRun ? '#8d5ef2' : '#000000',
+                                   backgroundColor: tbChrome.material ? '#00000000' : (firstRun ? '#8d5ef2' : '#1f1f1f'),
                                    title: 'Riff',
                                    icon: path.join(__dirname, '../../assets', 'icon.png'),
-                                   frame: IS_MAC,
+                                   frame: IS_MAC || tbChrome.nativeControls,
                                    titleBarStyle: IS_MAC ? 'hiddenInset' : 'hidden',
                                    ...(IS_MAC ? { trafficLightPosition: { x: 14, y: 13 } } : {}),
+                                   ...(tbChrome.nativeControls ? { titleBarOverlay: tuneboxOverlay(true) } : {}),
+                                   ...(tbChrome.material ? { backgroundMaterial: 'mica' } : {}),
                                    show: false,
                                    useContentSize: true,
                                    webPreferences: {
@@ -1292,12 +1328,14 @@ function runGUI() {
           mainWindow.setSize(380, 160);
           mainWindow.setAlwaysOnTop(true);
           syncWindowButtons();
+          applyTuneboxOverlay();
           return true;
         } else {
           isMiniWindow = false;
           preMiniLyricsH = null;
           mainWindow.setAlwaysOnTop(false);
           syncWindowButtons();
+          applyTuneboxOverlay();
           mainWindow.setMinimumSize(800, 540);
           if (preMiniBounds) {
             mainWindow.setBounds(clampBoundsToDisplay(preMiniBounds));
