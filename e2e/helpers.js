@@ -1,0 +1,96 @@
+'use strict';
+
+// Launches the real Riff Electron app in a throwaway profile so tests never touch the user's own data.
+
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { _electron } = require('@playwright/test');
+
+const ROOT = path.resolve(__dirname, '..');
+const APP_VERSION = require('../package.json').version;
+
+// A mono 16-bit PCM WAV with a sine tone. Small (8 kHz) but long enough to seek in.
+function writeToneWav(file, { seconds = 30, freq = 440, rate = 8000 } = {}) {
+  const samples = seconds * rate;
+  const buf = Buffer.alloc(44 + samples * 2);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + samples * 2, 4); buf.write('WAVE', 8);
+  buf.write('fmt ', 12); buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(1, 22);
+  buf.writeUInt32LE(rate, 24); buf.writeUInt32LE(rate * 2, 28); buf.writeUInt16LE(2, 32); buf.writeUInt16LE(16, 34);
+  buf.write('data', 36); buf.writeUInt32LE(samples * 2, 40);
+  for (let i = 0; i < samples; i++) buf.writeInt16LE(Math.round(Math.sin((2 * Math.PI * freq * i) / rate) * 3000), 44 + i * 2);
+  fs.writeFileSync(file, buf);
+  return file;
+}
+
+function makeProfile() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'riff-e2e-'));
+  const dirs = {};
+  for (const d of ['data', 'local', 'roaming', 'userData', 'music']) {
+    dirs[d] = path.join(dir, d);
+    fs.mkdirSync(dirs[d], { recursive: true });
+  }
+  // Skip the first-run welcome screen (platform.js accepts this marker inside the data dir).
+  fs.writeFileSync(path.join(dirs.data, '.rifftutorial'), APP_VERSION);
+  return { dir, ...dirs };
+}
+
+async function launchRiff({ width = 1600, height = 1000, maximize = false } = {}) {
+  const profile = makeProfile();
+  // VS Code's terminal sets ELECTRON_RUN_AS_NODE, which would start Electron as plain Node.
+  const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'ELECTRON_RUN_AS_NODE'));
+  Object.assign(env, {
+    RIFF_DATA_DIR: profile.data,
+    RIFF_STORAGE_FILE: path.join(profile.userData, 'storage.json'),
+    LOCALAPPDATA: profile.local,
+    APPDATA: profile.roaming,
+  });
+  const app = await _electron.launch({
+    cwd: ROOT,
+    args: ['.', `--user-data-dir=${profile.userData}`],
+    env,
+    timeout: 60_000,
+  });
+  const page = await app.firstWindow();
+  await page.waitForLoadState('domcontentloaded');
+  await app.evaluate(({ BrowserWindow, screen }, size) => {
+    const win = BrowserWindow.getAllWindows()[0];
+    if (size.maximize) { win.maximize(); return; }
+    if (win.isMaximized()) win.unmaximize();
+    // Never larger than the screen, or the OS clips the window and screenshots get cut off.
+    const area = screen.getDisplayMatching(win.getBounds()).workAreaSize;
+    win.setContentSize(Math.min(size.width, area.width), Math.min(size.height, area.height - 40));
+    win.center();
+  }, { width, height, maximize });
+  await page.waitForTimeout(300);
+  await page.waitForSelector('#playbar', { state: 'attached' });
+  // The boot skeleton covers the UI until the app has started.
+  await page.waitForSelector('#boot-skeleton', { state: 'hidden', timeout: 30_000 }).catch(() => {});
+  return { app, page, profile };
+}
+
+// Answer the next "Add files" dialog with these paths instead of showing it.
+async function stubOpenDialog(app, filePaths) {
+  await app.evaluate(({ dialog }, paths) => {
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: paths });
+  }, filePaths);
+}
+
+async function closeRiff(ctx) {
+  if (!ctx) return;
+  try {
+    // Riff hides to the tray on close, so quit the app outright.
+    await ctx.app.evaluate(({ app }) => app.exit(0));
+  } catch (e) {}
+  try { await ctx.app.close(); } catch (e) {}
+  try { fs.rmSync(ctx.profile.dir, { recursive: true, force: true }); } catch (e) {}
+}
+
+function audioState(page) {
+  return page.evaluate(() => {
+    const a = document.getElementById('native-audio');
+    return a ? { paused: a.paused, time: a.currentTime, duration: a.duration, src: a.currentSrc } : null;
+  });
+}
+
+module.exports = { ROOT, launchRiff, closeRiff, stubOpenDialog, writeToneWav, audioState };

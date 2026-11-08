@@ -11,13 +11,17 @@
     "dist": "electron-builder",
     "release": "npm version patch && git push --follow-tags",
     "release:minor": "npm version minor && git push --follow-tags",
-    "release:major": "npm version major && git push --follow-tags"
+    "release:major": "npm version major && git push --follow-tags",
+    "test:ui": "playwright test e2e/playback.spec.js"
   },
   "keywords": [],
   "author": "rootscripts",
   "license": "MIT",
   "description": "made for humans, Riff - audio player.",
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@playwright/test": "^1.65.0",
     "electron": "^41.7.1",
     "electron-builder": "^26.15.3"
   },

@@ -177,6 +177,8 @@ function runGUI() {
   const FALLBACK_STORAGE_FILE = path.join(app.getPath('userData'), 'storage.json');
 
   function getActiveStorageFile() {
+    // Automated UI tests point this at a throwaway profile so they never touch real data.
+    if (process.env.RIFF_STORAGE_FILE) return process.env.RIFF_STORAGE_FILE;
     if (process.platform === 'darwin' || app.isPackaged) {
       return FALLBACK_STORAGE_FILE;
     }

@@ -21,3 +21,9 @@ storage.json
 *.enc
 *.tmp
 .yt-logged-out
+
+# UI test output
+e2e/.results/
+e2e/screenshots/
+test-results/
+playwright-report/
