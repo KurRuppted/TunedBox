@@ -8,7 +8,6 @@
 
 #tb {
   --tb-sidebar-w: 232px;
-  --tb-playbar-h: 96px; /* Riff's player bar; the floating Tunebox dock arrives in stage 4 */
 }
 
 /* Where the content column starts and ends. */
@@ -581,66 +580,6 @@
 #tb body:not(.mini) .top-nav #tb-toolbar-end > button svg { width: 16px !important; height: 16px !important; }
 #tb body:not(.mini) .top-nav #tb-toolbar-end { flex: none; display: flex; align-items: center; gap: 2px; }
 
-/* Search stays here until stage 4 moves it into the round search button above the player. */
-#tb body:not(.mini) .top-nav #btn-top-search-home { display: none !important; }
-#tb body:not(.mini) .top-nav .search-box-wrapper {
-  position: static !important;
-  flex: 0 1 340px !important;
-  width: auto !important;
-  max-width: 340px !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-  transform: none !important;
-  display: flex !important;
-  align-items: center !important;
-}
-#tb body:not(.mini) .top-nav .search-box {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  width: 100% !important;
-  height: 28px !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 8px !important;
-  border: 0 !important;
-  border-radius: 7px !important;
-  background: var(--fill) !important;
-  box-shadow: none !important;
-  color: var(--text-3) !important;
-  transition: box-shadow 0.15s, background 0.15s;
-}
-#tb body:not(.mini) .top-nav .search-box:focus-within {
-  background: var(--window) !important;
-  color: var(--text-2) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent) !important;
-}
-#tb body:not(.mini) .top-nav .search-box :is(.search-icon-btn, .search-clear-btn) {
-  flex: none !important; display: grid !important; place-items: center !important;
-  width: 16px !important; height: 16px !important; min-width: 0 !important; padding: 0 !important; margin: 0 !important;
-  background: none !important; border: 0 !important; color: inherit !important; box-shadow: none !important;
-}
-#tb body:not(.mini) .top-nav .search-box .search-clear-btn.hidden { display: none !important; }
-#tb body:not(.mini) .top-nav .search-box :is(.search-icon-btn, .search-clear-btn) svg { width: 14px !important; height: 14px !important; }
-#tb body:not(.mini) .top-nav .search-box > img,
-#tb body:not(.mini) .top-nav .search-box .search-platform-logo { width: 14px !important; height: 14px !important; }
-#tb body:not(.mini) .top-nav #search-input {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  outline: none !important;
-  background: none !important;
-  box-shadow: none !important;
-  color: var(--text) !important;
-  font-size: calc(13px * var(--fs, 1)) !important;
-  font-weight: 400 !important;
-}
-#tb body:not(.mini) .top-nav #search-input::placeholder { color: var(--text-3) !important; }
-
 /* Source switch (YouTube / YouTube Music / SoundCloud): a Tunebox segmented control. */
 #tb body:not(.mini) .top-nav .platform-switch-container {
   position: static !important;
@@ -698,7 +637,7 @@
   top: 0 !important;
   left: var(--tb-left) !important;
   right: 0 !important;
-  bottom: var(--tb-playbar-h) !important;
+  bottom: 0 !important;
   width: auto !important;
   height: auto !important;
   max-height: none !important;
@@ -739,25 +678,15 @@
   box-shadow: none !important;
 }
 #tb.has-material body:not(.mini) #right-panel:not(.hidden) { background: var(--sidebar-material) !important; }
-
-/* Riff's player bar along the bottom of the content column (stage 4 replaces it with the floating dock). */
-#tb body:not(.mini) #playbar {
-  position: fixed !important;
-  left: var(--tb-left) !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: auto !important;
-  height: var(--tb-playbar-h) !important;
-  margin: 0 !important;
+/* Closed: no width at all (Riff's side padding would otherwise leave a 32px strip at the window's edge). */
+#tb body:not(.mini) #right-panel.hidden {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   border: 0 !important;
-  border-top: 0.5px solid var(--separator) !important;
-  border-radius: 0 !important;
-  background: var(--window) !important;
-  box-shadow: none !important;
-  transition: left 0.25s var(--ease) !important;
+  overflow: hidden !important;
 }
-#tb body:not(.mini) #playbar::before,
-#tb body:not(.mini) #playbar::after { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   #tb body:not(.mini) :is(#sidebar, .app-layout, .top-nav, #playbar) { transition: none !important; }

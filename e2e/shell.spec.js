@@ -106,9 +106,10 @@ test('the account row opens Settings → Account', async () => {
 test('the window frame never scrolls away', async () => {
   await page.evaluate(() => { document.body.scrollTop = 200; document.documentElement.scrollTop = 200; });
   await expect.poll(() => page.evaluate(() => document.body.scrollTop + document.documentElement.scrollTop)).toBe(0);
+  // The floating dock (stage 4) sits 14px above the bottom of the window.
   const box = await page.locator('#playbar').boundingBox();
   const vh = await page.evaluate(() => innerHeight);
-  expect(Math.round(box.y + box.height)).toBe(vh);
+  expect(Math.round(box.y + box.height)).toBe(vh - 14);
 });
 
 test('Windows gets native caption buttons', async () => {

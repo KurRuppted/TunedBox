@@ -116,6 +116,25 @@ test('capture screens', async () => {
     await shot('16-new-playlist-menu');
     await page.evaluate(() => document.getElementById('sb-create-popover').classList.add('hidden'));
 
+    // The Tunebox search button above the dock, opened (stage 4 onwards).
+    if (await page.evaluate(() => !!document.getElementById('tb-search-float'))) {
+      await go('nav-discover');
+      await page.locator('#search-icon-btn').click();
+      await page.locator('#search-input').pressSequentially('Lauv', { delay: 30 });
+      await shot('18-search-open');
+      await page.locator('#search-input').press('Escape');
+      // The dock with the pointer over the track (Riff's extra track actions show).
+      await page.locator('#playbar .track-meta').hover();
+      await page.locator('#scrubber-track').hover();
+      await shot('19-dock-hover');
+      await page.mouse.move(600, 300);
+      await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'light' }));
+      await page.locator('#search-icon-btn').click();
+      await shot('20-light-dock-search');
+      await page.locator('#search-input').press('Escape');
+      await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'dark' }));
+    }
+
     await go('btn-mini-player');
     await page.waitForTimeout(2000); // the window shrinks to the mini player
     await shot('17-mini-player');

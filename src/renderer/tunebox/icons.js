@@ -64,6 +64,8 @@
     '#btn-toggle-lyrics-panel svg': paths.lyricsPanel,
     '#btn-toggle-queue-panel svg': paths.queue,
     '#btn-open-settings svg': paths.sliders,
+    '#btn-playbar-karaoke svg': paths.focus,
+    '#search-icon-btn .search-icon': paths.search,
     '#btn-sb-settings svg': paths.settings,
     '#volume-icon': paths.volume,
     '#volume-muted-icon': paths.mute,

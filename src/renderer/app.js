@@ -229,6 +229,16 @@ if (localStorage.getItem('riff_flat_prog_default_v1') !== '1') {
   localStorage.setItem('riff_progress_knob', 'false');
 }
 
+// Tunebox player bar defaults, once: times always shown, the knob appears on hover, a plain play
+// button and no visualizer in the bar (as in Tunebox). Riff's settings for each still work afterwards.
+if (localStorage.getItem('tunebox_playbar_v1') !== '1') {
+  localStorage.setItem('tunebox_playbar_v1', '1');
+  localStorage.setItem('riff_progress_knob', 'true');
+  localStorage.setItem('riff_adv_autohide_timestamps', 'false');
+  localStorage.setItem('riff_play_btn_bg', 'false');
+  localStorage.setItem('riff_bar_wave', '0');
+}
+
 (() => {
   let lastErrLogReset = Date.now();
   let errLogCount = 0;
@@ -3840,7 +3850,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const centerY = sh / 2;
 
-          const showProgressBg = localStorage.getItem('riff_progress_bg') !== 'false';
+          // Tunebox player bar: a thin track, a soft fill and a round white knob (tunebox/player.js has the colours).
+          const tbBar = (window.Tunebox && window.Tunebox.player && !document.body.classList.contains('mini'))
+            ? window.Tunebox.player.scrubberStyle() : null;
+          if (tbBar) {
+            const tbPad = 2;
+            const tbEnd = sw - tbPad;
+            const tbX = tbPad + scrubProgress * Math.max(0, tbEnd - tbPad);
+            sCtx.lineCap = 'round';
+            sCtx.lineJoin = 'round';
+            sCtx.lineWidth = 4;
+            if (localStorage.getItem('riff_progress_bg') !== 'false') {
+              sCtx.beginPath();
+              sCtx.strokeStyle = tbBar.track;
+              sCtx.moveTo(tbPad, centerY);
+              sCtx.lineTo(tbEnd, centerY);
+              sCtx.stroke();
+            }
+            if (tbX > tbPad) {
+              sCtx.beginPath();
+              sCtx.strokeStyle = tbBar.fill;
+              if (document.body.classList.contains('no-wavy')) {
+                sCtx.moveTo(tbPad, centerY);
+                sCtx.lineTo(tbX, centerY);
+              } else {
+                for (let x = tbPad; x <= tbX; x += 2) {
+                  const y = centerY + Math.sin((x - tbPad) * k + scrubPhase) * 2.5;
+                  if (x === tbPad) sCtx.moveTo(x, y); else sCtx.lineTo(x, y);
+                }
+                sCtx.lineTo(tbX, centerY + Math.sin((tbX - tbPad) * k + scrubPhase) * 2.5);
+              }
+              sCtx.stroke();
+            }
+            if (!noKnob && (isDraggingScrubber || isHoveringScrubber)) {
+              const kx = Math.max(7, Math.min(sw - 7, tbX));
+              sCtx.save();
+              sCtx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+              sCtx.shadowBlur = 2;
+              sCtx.shadowOffsetY = 0.5;
+              sCtx.beginPath();
+              sCtx.arc(kx, centerY, 7, 0, Math.PI * 2);
+              sCtx.fillStyle = tbBar.knob;
+              sCtx.fill();
+              sCtx.restore();
+            }
+          }
+
+          const showProgressBg = !tbBar && localStorage.getItem('riff_progress_bg') !== 'false';
           if (showProgressBg && padLeft < bgEndX - 1) {
             sCtx.save();
             sCtx.globalAlpha = 0.22;
@@ -3854,7 +3910,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sCtx.restore();
           }
 
-          if (waveEnd > waveStart) {
+          if (!tbBar && waveEnd > waveStart) {
             sCtx.beginPath();
             sCtx.lineWidth = 5.5;
             sCtx.lineCap = 'round';
@@ -3882,7 +3938,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          const showKnob = !noKnob && (isDraggingScrubber || isHoveringScrubber);
+          const showKnob = !tbBar && !noKnob && (isDraggingScrubber || isHoveringScrubber);
           if (showKnob) {
             sCtx.beginPath();
             sCtx.arc(knobCenterX, centerY, 6.5, 0, Math.PI * 2);

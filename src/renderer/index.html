@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="tunebox/fonts.css">
   <link rel="stylesheet" href="tunebox/tokens.css">
   <link rel="stylesheet" href="tunebox/shell.css">
+  <link rel="stylesheet" href="tunebox/player.css">
   <script>document.documentElement.dataset.theme = 'dark';</script>
   <script>if (/Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '')) document.documentElement.classList.add('platform-darwin');</script>
   <style id="tg-account-critical-css">
@@ -376,22 +377,6 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
       <span data-i18n>Offline mode</span>
       <button type="button" class="offline-top-retry-btn" id="btn-offline-top-retry" data-i18n>Retry</button>
     </div>
-    <div class="search-box-wrapper">
-      <button type="button" class="top-search-home-btn" id="btn-top-search-home" title="Home" aria-label="Home"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
-      <div class="search-box">
-        <button id="search-icon-btn" class="search-icon-btn" title="Search" type="button">
-          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
-          </svg>
-        </button>
-        <input type="text" id="search-input" placeholder="Search tracks, artists, or albums..." data-i18n-attr="placeholder" autocomplete="off">
-        <button id="search-clear-btn" class="search-clear-btn hidden" title="Clear">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-    </div>
-
     <div class="platform-switch-container">
       <div class="platform-pill-switch">
         <button class="platform-btn" data-platform="youtube" id="platform-yt" title="YouTube">
@@ -1252,7 +1237,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
               </div>
             </div>
 
-            <div class="setting-item" id="setting-search-pos-row">
+            <div class="setting-item tb-retired" id="setting-search-pos-row" hidden>
               <div class="setting-item-top">
                 <span class="setting-name">Position of searchbar</span>
               </div>
@@ -1372,7 +1357,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
               </div>
             </div>
 
-            <div class="setting-item">
+            <div class="setting-item tb-retired" hidden>
               <div class="setting-item-top" style="align-items: center;">
                 <div style="display: flex; flex-direction: column; gap: 2px;">
                   <span class="setting-name" data-i18n>Home button next to searchbar</span>
@@ -3126,6 +3111,25 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
     <button type="button" class="btn-icon-pill" id="btn-bulk-clear" title="Clear selection" style="width: 28px; height: 28px;">✕</button>
   </div>
 
+  <!-- Tunebox search: a round button floating above the player bar that opens into Riff's search field. -->
+  <div class="tb-search-float" id="tb-search-float">
+    <div class="search-box-wrapper">
+      <button type="button" class="top-search-home-btn" id="btn-top-search-home" title="Home" aria-label="Home"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+      <div class="search-box">
+        <button id="search-icon-btn" class="search-icon-btn" title="Search (Ctrl+K)" aria-label="Search" type="button">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-4-4"></path>
+          </svg>
+        </button>
+        <input type="text" id="search-input" placeholder="Search tracks, artists, or albums..." data-i18n-attr="placeholder" autocomplete="off" spellcheck="false">
+        <button id="search-clear-btn" class="search-clear-btn hidden" title="Clear" aria-label="Clear search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <footer class="playbar" id="playbar">
     <canvas id="bottom-visualizer" class="playbar-bg-visualizer"></canvas>
     <div class="playbar-left">
@@ -3202,7 +3206,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6H3"/><path d="M15 12H3"/><path d="M11 18H3"/><polygon points="17 14 22 17 17 20 17 14" fill="currentColor" stroke="none"/></svg>
       </button>
 
-      <button class="btn-icon-pill" id="btn-playbar-karaoke" title="Lyrics (Fullscreen)"><span class="material-symbols-rounded" style="font-size: 20px; line-height: 1;">lyrics</span></button>
+      <button class="btn-icon-pill" id="btn-playbar-karaoke" title="Lyrics (Fullscreen)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg></button>
 
       <div class="lyrics-btn-anchor" style="position:relative;display:inline-flex;align-items:center;justify-content:center;">
         <div class="lyrics-here-callout hidden" id="lyrics-here-callout"><span data-i18n>Lyrics are now here</span><button type="button" id="btn-close-lyrics-callout" aria-label="Close">✕</button></div>
@@ -4731,5 +4735,6 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
   <script src="tunebox/icons.js"></script>
   <script src="app.js"></script>
   <script src="tunebox/shell.js"></script>
+  <script src="tunebox/player.js"></script>
 </body>
 </html>

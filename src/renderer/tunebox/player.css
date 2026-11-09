@@ -1,0 +1,521 @@
+/* Tunebox player bar and search (stage 4).
+   Riff's player bar becomes Tunebox's floating dock: a 1000px glass bar 14px above the bottom of the
+   content column. Riff's search becomes the round search button just above the dock's right end.
+   Everything keeps Riff's IDs and handlers; this file only restyles. Scoped like shell.css. */
+
+#tb body:not(.mini) {
+  --tb-dock-w: min(1000px, calc(100vw - var(--tb-left) - var(--tb-right, 0px) - 28px));
+  --tb-dock-solid: rgb(246 246 246);
+}
+#tb[data-theme='dark'] body:not(.mini) { --tb-dock-solid: rgb(42 42 44); }
+
+/* The page now runs underneath the dock, to the bottom of the window. */
+#tb body:not(.mini) .app-layout { bottom: 0 !important; }
+#tb body:not(.mini) #main-content { padding-bottom: calc(var(--tb-dock-h, 70px) + 40px) !important; }
+
+/* ---------- Dock ---------- */
+#tb body:not(.mini) #playbar {
+  position: fixed !important;
+  left: var(--tb-left) !important;
+  right: var(--tb-right, 0px) !important;
+  top: auto !important;
+  bottom: 14px !important;
+  width: var(--tb-dock-w) !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 8px 14px 8px 8px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 1.4fr) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  overflow: visible !important;
+  transform: none !important;
+  z-index: 3000 !important;
+  transition: left 0.25s var(--ease), right 0.25s var(--ease), width 0.25s var(--ease) !important;
+}
+#tb body.perf:not(.mini) #playbar,
+#tb body.no-panel-blur:not(.mini) #playbar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--tb-dock-solid) !important;
+}
+/* Riff's decorative glow along the bar's edge has no place on the dock. */
+#tb body:not(.mini) #playbar::before,
+#tb body:not(.mini) #playbar::after { display: none !important; }
+/* Riff's optional visualizer behind the bar, clipped to the dock's corners. */
+#tb body:not(.mini) #bottom-visualizer {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 14px !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+#tb body:not(.mini) #playbar > :is(.playbar-left, .playbar-center, .playbar-right) {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: none !important;
+  transform: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Dock buttons: Tunebox icon buttons (30px, 7px corners, secondary text, accent when on). */
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill) {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: none !important;
+  place-items: center;
+  justify-content: center !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--text-2) !important;
+  transform: none !important;
+  transition: color 0.12s, background 0.12s !important;
+}
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill)::before,
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill)::after { display: none !important; }
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill):hover:not(:disabled) { color: var(--text) !important; background: var(--hover) !important; }
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill):active:not(:disabled) { background: var(--fill-2) !important; }
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill).active { color: var(--accent) !important; }
+#tb body:not(.mini) #playbar :is(.control-btn, .btn-icon-pill) svg { width: 17px !important; height: 17px !important; }
+
+/* ---------- Left: cover, title, artist, heart ---------- */
+#tb body:not(.mini) #playbar .playbar-left {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+}
+#tb body:not(.mini) #playbar #playbar-artwork-wrapper {
+  position: relative !important;
+  flex: none !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  background: linear-gradient(135deg, var(--fill-2), var(--fill)) !important;
+  box-shadow: 0 0 0 0.5px var(--art-edge) !important;
+  transform: none !important;
+}
+#tb body:not(.mini) #playbar #m3c-wrap { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; margin: 0 !important; transform: none !important; }
+#tb body:not(.mini) #playbar #playbar-artwork {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  object-fit: cover !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+#tb body:not(.mini) #playbar #m3c-canvas { width: 100% !important; height: 100% !important; }
+#tb body:not(.mini) #playbar #artwork-fallback {
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: none !important;
+  color: var(--text-3) !important;
+}
+#tb body:not(.mini) #playbar #artwork-fallback svg { width: 18px !important; height: 18px !important; }
+
+#tb body:not(.mini) #playbar .track-meta {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#tb body:not(.mini) #playbar .track-title-marquee { min-width: 0 !important; max-width: 100% !important; overflow: hidden !important; }
+#tb body:not(.mini) #playbar #playbar-title {
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 550 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  color: var(--text) !important;
+  white-space: nowrap !important;
+}
+#tb body:not(.mini) #playbar #playbar-artist {
+  display: block !important;
+  max-width: 100% !important;
+  font-family: var(--font) !important;
+  font-size: calc(12px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+  line-height: 1.35 !important;
+  color: var(--text-2) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+/* Saved to Liked songs: Tunebox's accent heart. */
+#tb body:not(.mini) #playbar #btn-toggle-fav:has(#fav-icon[fill='currentColor']) { color: var(--accent) !important; }
+/* Riff's extra track actions (edit, download, share) appear when the pointer is over this end of the dock. */
+#tb body:not(.mini) #playbar :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) {
+  opacity: 0;
+  transition: opacity 0.15s, color 0.12s, background 0.12s !important;
+}
+#tb body:not(.mini) #playbar .playbar-left:is(:hover, :has(:focus-visible)) :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) { opacity: 1; }
+#tb body:not(.mini) #playbar :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) svg { width: 15px !important; height: 15px !important; }
+
+/* ---------- Centre: transport and progress ---------- */
+#tb body:not(.mini) #playbar .playbar-center {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+#tb body:not(.mini) #playbar .playback-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+}
+#tb body:not(.mini) #playbar :is(#btn-shuffle, #btn-repeat) svg { width: 16px !important; height: 16px !important; }
+#tb body:not(.mini) #playbar :is(#btn-prev, #btn-next) svg { width: 18px !important; height: 18px !important; }
+#tb body:not(.mini) #playbar .play-pause-wrapper { display: contents !important; }
+#tb body:not(.mini) #playbar #btn-play-pause {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-height: 34px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  transition: background 0.12s, transform 0.12s var(--ease) !important;
+}
+#tb body:not(.mini) #playbar #btn-play-pause::before,
+#tb body:not(.mini) #playbar #btn-play-pause::after { display: none !important; }
+#tb body:not(.mini) #playbar #btn-play-pause:hover { background: var(--hover) !important; }
+#tb body:not(.mini) #playbar #btn-play-pause:active { transform: scale(0.94) !important; }
+/* Riff's "play button background" setting: Tunebox's filled accent circle. */
+#tb body:not(.play-btn-nobg):not(.mini) #playbar #btn-play-pause { background: var(--accent) !important; color: var(--on-accent) !important; }
+#tb body:not(.play-btn-nobg):not(.mini) #playbar #btn-play-pause:hover { background: var(--accent-hover, var(--accent)) !important; }
+#tb body:not(.mini) #playbar #btn-play-pause #play-icon { width: 20px !important; height: 20px !important; }
+#tb body:not(.mini) #playbar #btn-play-pause .play-spinner { width: 26px !important; height: 26px !important; }
+
+#tb body:not(.mini) #playbar .scrubber-bar-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+#tb body:not(.mini) #playbar .time-label {
+  flex: none !important;
+  width: 34px !important;
+  margin: 0 !important;
+  font-family: var(--font) !important;
+  font-size: calc(10.5px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+  color: var(--text-2) !important;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums;
+}
+#tb body:not(.mini) #playbar #scrubber-track {
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  overflow: visible !important;
+  cursor: pointer;
+}
+#tb body:not(.mini) #playbar #squiggly-canvas {
+  position: absolute !important;
+  left: 0 !important;
+  top: 50% !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+}
+
+/* ---------- Right: Riff's panel and audio buttons, then volume ---------- */
+#tb body:not(.mini) #playbar .playbar-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 4px !important;
+  color: var(--text-2) !important;
+}
+#tb body:not(.mini) #playbar :is(.lyrics-btn-anchor, .audio-btn-anchor) { flex: none !important; }
+#tb body:not(.mini) #playbar #settings-modified-dot { top: 5px !important; right: 5px !important; width: 6px !important; height: 6px !important; background: var(--accent) !important; }
+#tb body:not(.mini) #playbar .volume-control-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+#tb body:not(.mini) #playbar .volume-slider-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  width: 90px !important;
+  margin: 0 0 0 4px !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+}
+/* Tunebox slider: thin track filled to the value, white knob. player.js keeps --tb-pct current.
+   Riff wraps its sliders in an expressive slider (.sl); here only the plain input shows. */
+#tb body:not(.mini) #playbar .volume-slider-wrapper .sl {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 20px !important;
+}
+#tb body:not(.mini) #playbar .volume-slider-wrapper :is(.sl-active, .sl-inactive) { display: none !important; }
+#tb body:not(.mini) #playbar #volume-slider {
+  position: static !important;
+  inset: auto !important;
+  opacity: 1 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 4px !important;
+  margin: 8px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: linear-gradient(to right, var(--fill-strong) var(--tb-pct, 0%), var(--fill-2) var(--tb-pct, 0%)) !important;
+  cursor: default;
+}
+#tb body:not(.mini) #playbar #volume-slider::-webkit-slider-runnable-track { height: 4px !important; background: transparent !important; border: 0 !important; }
+#tb body:not(.mini) #playbar #volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-top: -5px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  box-shadow: 0 0.5px 2px rgb(0 0 0 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.12) !important;
+  transform: none !important;
+}
+#tb body:not(.mini) #playbar #volume-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* Riff's tips that point at a dock button ("Lyrics are now here", "Try out the audio editor!"). */
+#tb body:not(.mini) #playbar .lyrics-here-callout {
+  border-radius: 8px !important;
+  background: var(--menu) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  font-family: var(--font) !important;
+  font-size: calc(12px * var(--fs, 1)) !important;
+  font-weight: 500 !important;
+}
+#tb body:not(.mini) #playbar .lyrics-here-callout::before,
+#tb body:not(.mini) #playbar .lyrics-here-callout::after { display: none !important; }
+#tb body:not(.mini) #playbar .lyrics-here-callout button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  outline: none !important;
+  color: var(--text-2) !important;
+  background: var(--fill) !important;
+  font-size: 10px !important;
+}
+#tb body:not(.mini) #playbar .lyrics-here-callout button:hover { color: var(--text) !important; background: var(--fill-2) !important; }
+
+/* ---------- Search: round button above the dock's right end, opens into a field ---------- */
+#tb-search-float { display: none; }
+#tb body:not(.mini) #tb-search-float {
+  position: fixed;
+  left: var(--tb-left);
+  right: var(--tb-right, 0px);
+  bottom: calc(14px + var(--tb-dock-h, 70px));
+  width: var(--tb-dock-w);
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 3001;
+  transition: left 0.25s var(--ease), right 0.25s var(--ease), width 0.25s var(--ease);
+}
+#tb body:not(.mini) #tb-search-float .search-box-wrapper {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  pointer-events: auto;
+}
+#tb body:not(.mini) #tb-search-float #btn-top-search-home { display: none !important; }
+#tb body:not(.mini) #tb-search-float .search-box {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  color: var(--text) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  backdrop-filter: blur(30px) saturate(1.8);
+  transform: none !important;
+  outline: none !important;
+  transition: width 0.3s var(--ease) !important;
+}
+#tb body.perf:not(.mini) #tb-search-float .search-box,
+#tb body.no-panel-blur:not(.mini) #tb-search-float .search-box { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--tb-dock-solid) !important; }
+#tb body:not(.mini) #tb-search-float .search-box-wrapper.tb-open .search-box { width: 320px !important; }
+#tb body:not(.mini) #tb-search-float .search-icon-btn {
+  position: relative !important;
+  flex: none !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  transition: color 0.12s !important;
+}
+#tb body:not(.mini) #tb-search-float .search-icon-btn:hover { color: var(--accent) !important; }
+#tb body:not(.mini) #tb-search-float .search-icon-btn .search-icon { display: block !important; width: 16px !important; height: 16px !important; }
+/* Riff shows the last result's cover in place of the magnifier; Tunebox keeps the magnifier. */
+#tb body:not(.mini) #tb-search-float .search-icon-btn .search-icon-cover { display: none !important; }
+#tb body:not(.mini) #tb-search-float #search-input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 14px 0 0 !important;
+  border: 0 !important;
+  outline: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+}
+#tb body:not(.mini) #tb-search-float #search-input::placeholder { color: var(--text-3) !important; opacity: 1; }
+#tb body:not(.mini) #tb-search-float .search-clear-btn {
+  flex: none !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 0 !important;
+  margin: 0 9px 0 -6px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: var(--fill) !important;
+  color: var(--text-2) !important;
+}
+#tb body:not(.mini) #tb-search-float .search-clear-btn:hover { background: var(--fill-2) !important; color: var(--text) !important; }
+#tb body:not(.mini) #tb-search-float .search-clear-btn.hidden,
+#tb body:not(.mini) #tb-search-float .search-box-wrapper:not(.tb-open) .search-clear-btn { display: none !important; }
+#tb body:not(.mini) #tb-search-float .search-clear-btn svg { width: 11px !important; height: 11px !important; }
+
+/* Riff's search history opens upwards from the field, as a Tunebox menu. */
+#tb body:not(.mini) #tb-search-float #search-history-panel {
+  position: absolute !important;
+  top: auto !important;
+  bottom: calc(100% + 8px) !important;
+  left: auto !important;
+  right: 0 !important;
+  width: 320px !important;
+  max-height: min(440px, 55vh) !important;
+  padding: 5px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+  backdrop-filter: blur(30px) saturate(1.8) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  animation: pop-in 0.16s var(--ease);
+  transform-origin: bottom right;
+}
+#tb body:not(.mini) #tb-search-float #search-history-panel.hidden { display: none !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-head { padding: 4px 8px 6px !important; font-size: calc(11px * var(--fs, 1)) !important; font-weight: 650 !important; color: var(--text-3) !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-clear { font-size: calc(12px * var(--fs, 1)) !important; font-weight: 500 !important; color: var(--accent) !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-row { gap: 10px !important; padding: 5px 8px !important; border-radius: 6px !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-row:hover { background: var(--hover) !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-thumb { width: 36px !important; height: 36px !important; border-radius: 5px !important; background: var(--fill) !important; color: var(--text-3) !important; position: relative; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-thumb.round { border-radius: 50% !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-title { font-size: calc(13px * var(--fs, 1)) !important; font-weight: 550 !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-sub { font-size: calc(12px * var(--fs, 1)) !important; color: var(--text-2) !important; }
+#tb body:not(.mini) #tb-search-float #search-history-panel .sh-remove { color: var(--text-3) !important; }
+
+/* The source switch (YouTube Music / SoundCloud) stays in the toolbar, at its right end. */
+#tb body:not(.mini) .top-nav .platform-switch-container { margin-left: auto !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #tb body:not(.mini) :is(#playbar, #tb-search-float, #tb-search-float .search-box) { transition: none !important; }
+}
