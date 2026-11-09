@@ -46,10 +46,15 @@ async function launchRiff({ width = 1600, height = 1000, maximize = false, seed 
     RIFF_STORAGE_FILE: path.join(profile.userData, 'storage.json'),
     LOCALAPPDATA: profile.local,
     APPDATA: profile.roaming,
+    // Open in the background: tests never take focus from what the person is doing.
+    RIFF_SHOW_INACTIVE: '1',
   });
+  const pageCapture = process.env.RIFF_CAPTURE === 'page';
   const app = await _electron.launch({
     cwd: ROOT,
-    args: ['.', `--user-data-dir=${profile.userData}`],
+    // Keep rendering while other windows cover this one (a background window would otherwise pause).
+    args: ['.', `--user-data-dir=${profile.userData}`, '--disable-features=CalculateNativeWinOcclusion',
+      '--disable-backgrounding-occluded-windows', '--disable-renderer-backgrounding'],
     env,
     timeout: 60_000,
   });
@@ -57,13 +62,16 @@ async function launchRiff({ width = 1600, height = 1000, maximize = false, seed 
   await page.waitForLoadState('domcontentloaded');
   await app.evaluate(({ BrowserWindow, screen }, size) => {
     const win = BrowserWindow.getAllWindows()[0];
-    if (size.maximize) { win.maximize(); return; }
+    win.webContents.setBackgroundThrottling(false);
+    // Maximizing brings a window to the front; with page capture, size it to 1920×1032 instead.
+    if (size.maximize && !size.pageCapture) { win.maximize(); return; }
+    if (size.maximize) { if (win.isMaximized()) win.unmaximize(); win.setPosition(0, 0); win.setContentSize(1920, 1032); return; }
     if (win.isMaximized()) win.unmaximize();
     // Never larger than the screen, or the OS clips the window and screenshots get cut off.
     const area = screen.getDisplayMatching(win.getBounds()).workAreaSize;
     win.setContentSize(Math.min(size.width, area.width), Math.min(size.height, area.height - 40));
     win.center();
-  }, { width, height, maximize });
+  }, { width, height, maximize, pageCapture });
   await page.waitForTimeout(300);
   await page.waitForSelector('#playbar', { state: 'attached' });
   // The boot skeleton covers the UI until the app has started.
@@ -91,7 +99,16 @@ async function closeRiff(ctx) {
 // Screenshot of the window as it appears on screen. On Windows this includes what the page itself can't
 // capture: Mica behind the see-through sidebar and the native caption buttons. Elsewhere it falls back
 // to Electron's page capture.
+// RIFF_CAPTURE=page always uses the page capture: it never touches the screen or brings the window to
+// the front (use it while the computer is in use), but shows no Mica and no native caption buttons.
+async function capturePage(app, file) {
+  const png = await app.evaluate(async ({ BrowserWindow }) =>
+    (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'));
+  fs.writeFileSync(file, Buffer.from(png, 'base64'));
+}
+
 async function captureWindow(app, file) {
+  if (process.platform !== 'win32' || process.env.RIFF_CAPTURE === 'page') return capturePage(app, file);
   const info = await app.evaluate(({ BrowserWindow, screen }) => {
     const win = BrowserWindow.getAllWindows()[0];
     win.setAlwaysOnTop(true, 'screen-saver');
@@ -101,7 +118,7 @@ async function captureWindow(app, file) {
     return { x: b.x, y: b.y, width: b.width, height: b.height, scale };
   });
   try {
-    if (process.platform === 'win32') {
+    {
       await new Promise((r) => setTimeout(r, 400)); // let the window come to the front
       const s = info.scale;
       const [x, y, w, h] = [info.x * s, info.y * s, info.width * s, info.height * s].map(Math.round);
@@ -117,10 +134,6 @@ async function captureWindow(app, file) {
         '$g.Dispose(); $bmp.Dispose()'
       ].join('; ');
       require('node:child_process').execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps], { stdio: 'pipe' });
-    } else {
-      const png = await app.evaluate(async ({ BrowserWindow }) =>
-        (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'));
-      fs.writeFileSync(file, Buffer.from(png, 'base64'));
     }
   } finally {
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setAlwaysOnTop(false));

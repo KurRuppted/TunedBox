@@ -446,7 +446,9 @@ function runGUI() {
 
     mainWindow.once('ready-to-show', () => {
       if (!mainWindow || mainWindow.isDestroyed()) return;
-      mainWindow.show();
+      // Automated UI tests open the window without taking focus from whatever is in use.
+      if (process.env.RIFF_SHOW_INACTIVE === '1') mainWindow.showInactive();
+      else mainWindow.show();
     });
 
     mainWindow.loadFile(path.join(__dirname, '../renderer', firstRun ? 'welcome.html' : 'index.html'));

@@ -1,0 +1,70 @@
+/* Riff's now-playing panel on the right, in Tunebox's type and surfaces (stage 5).
+   Only the cover, title and the Credits card change; the lyrics keep Riff's design for now. */
+
+#tb body:not(.mini) #right-panel { font-family: var(--font) !important; color: var(--text) !important; }
+
+/* Cover: Tunebox's large-cover corners and shadow */
+#tb body:not(.mini) #right-panel #cover-container {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: linear-gradient(135deg, var(--fill-2), var(--fill)) !important;
+  box-shadow: 0 24px 48px -22px rgb(0 0 0 / 0.55), 0 0 0 0.5px var(--art-edge) !important;
+}
+#tb body:not(.mini) #right-panel #right-panel-cover { border-radius: 0 !important; }
+#tb body:not(.mini) #right-panel #right-panel-fallback { background: none !important; color: var(--text-3) !important; }
+
+/* Title and artist */
+#tb body:not(.mini) #right-panel #right-panel-title {
+  font-family: var(--font) !important;
+  font-size: calc(22px * var(--fs-head, var(--fs, 1))) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.022em !important;
+  line-height: 1.15 !important;
+  color: var(--text) !important;
+}
+#tb body:not(.mini) #right-panel #right-panel-artist {
+  font-family: var(--font) !important;
+  font-size: calc(14px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+  color: var(--text-2) !important;
+}
+#tb body:not(.mini) #right-panel #btn-rp-save-track {
+  width: 30px !important; height: 30px !important; min-width: 0 !important; padding: 0 !important; border: 0 !important;
+  border-radius: 7px !important; background: none !important; color: var(--text-2) !important; box-shadow: none !important;
+}
+#tb body:not(.mini) #right-panel #btn-rp-save-track:hover { background: var(--hover) !important; color: var(--text) !important; }
+
+/* Credits card: a Tunebox card (fill surface, 12px corners, small headings) */
+#tb body:not(.mini) #right-panel .rp-credits-card {
+  padding: 14px 16px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: var(--fill) !important;
+  box-shadow: none !important;
+  font-family: var(--font) !important;
+}
+#tb body:not(.mini) #right-panel .rp-credits-heading {
+  font-size: calc(15px * var(--fs-head, var(--fs, 1))) !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--text) !important;
+}
+#tb body:not(.mini) #right-panel .rp-credit-person-name { font-size: calc(13px * var(--fs, 1)) !important; font-weight: 550 !important; color: var(--text) !important; }
+#tb body:not(.mini) #right-panel .rp-credit-person-roles { font-size: calc(12px * var(--fs, 1)) !important; font-weight: 400 !important; color: var(--text-2) !important; }
+#tb body:not(.mini) #right-panel .rp-credits-source-row { border-color: var(--separator) !important; }
+#tb body:not(.mini) #right-panel .rp-credits-source-badge { font-size: calc(13px * var(--fs, 1)) !important; font-weight: 550 !important; color: var(--text) !important; }
+#tb body:not(.mini) #right-panel .rp-credit-follow-btn {
+  height: 24px !important; padding: 0 10px !important; border: 0 !important; border-radius: 6px !important;
+  background: var(--fill) !important; color: var(--text) !important; box-shadow: none !important;
+  font-family: var(--font) !important; font-size: calc(12px * var(--fs, 1)) !important; font-weight: 550 !important;
+}
+#tb body:not(.mini) #right-panel .rp-credit-follow-btn:hover { background: var(--fill-2) !important; }
+#tb body:not(.mini) #right-panel .rp-credit-follow-btn.following,
+#tb body:not(.mini) #right-panel .rp-credit-follow-btn.active { background: var(--accent) !important; color: var(--on-accent) !important; }
+
+/* Close button in the panel's header */
+#tb body:not(.mini) #right-panel #btn-close-right-panel {
+  width: 30px !important; height: 30px !important; min-width: 0 !important; padding: 0 !important; border: 0 !important;
+  border-radius: 7px !important; background: none !important; color: var(--text-2) !important; box-shadow: none !important;
+}
+#tb body:not(.mini) #right-panel #btn-close-right-panel:hover { background: var(--hover) !important; color: var(--text) !important; }

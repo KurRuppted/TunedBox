@@ -14852,6 +14852,59 @@ function renderClickableArtists(container, rawArtist, hintTrack = null) {
   window.renderQueue = renderQueue;
   window.removeTrackFromQueue = removeTrackFromQueue;
 
+  // For the Tunebox Home banner (tunebox/home.js): read-only views of the queue and lyrics, and the
+  // same "play this queued song" a Queue row click does.
+  window.tbRiff = {
+    upNext(count = 3) {
+      const q = Array.isArray(state.queue) ? state.queue : [];
+      const out = [];
+      for (let i = state.queueIndex + 1; i < q.length && out.length < count; i++) {
+        const t = q[i];
+        if (!t) continue;
+        out.push({
+          index: i,
+          title: t.title || 'Untitled',
+          artist: t.artist || t.uploader || '',
+          thumb: (typeof getTrackThumbUrl === 'function' ? getTrackThumbUrl(t) : '') || t.thumbnail || t.cover || ''
+        });
+      }
+      return out;
+    },
+    playQueued(index) {
+      if (!Number.isInteger(index) || !state.queue || !state.queue[index]) return;
+      state.queueIndex = index;
+      if (typeof recordPlayedIndex === 'function') recordPlayedIndex(index);
+      playTrack(state.queue[index]);
+    },
+    // The synced lyric line at `time` seconds: '' with no timed lyrics, '♪' between lines.
+    lyricAt(time) {
+      const lines = Array.isArray(state.syncedLyrics) ? state.syncedLyrics : [];
+      if (!lines.length || !Number.isFinite(time)) return '';
+      let idx = -1;
+      for (let i = 0; i < lines.length; i++) {
+        const start = getLineStartTime(i);
+        if (start < 0) continue;
+        if (start <= time) idx = i; else break;
+      }
+      if (idx < 0) return '';
+      const text = String(lines[idx].text || '').replace(/<[^>]+>/g, '').trim();
+      const end = getLineEndTime(idx);
+      if (!text || (Number.isFinite(end) && time > end + 1.5)) return '♪';
+      return text;
+    },
+    // The loaded song (playing or paused), or null.
+    current() {
+      const t = state.currentTrack;
+      if (!t) return null;
+      return {
+        title: t.title || 'Untitled',
+        artist: t.artist || t.uploader || '',
+        album: t.album || t.albumName || '',
+        thumb: (typeof getTrackThumbUrl === 'function' ? getTrackThumbUrl(t) : '') || t.thumbnail || t.cover || ''
+      };
+    }
+  };
+
   function renderQueueView() {
     updateQueueBadge();
     if (!el.queueTracksList) return;

@@ -58,7 +58,30 @@ test.afterAll(async () => closeRiff(ctx));
 test('capture screens', async () => {
   await go('nav-discover');
   await page.waitForTimeout(4000); // Home loads recommendations from the network
+  // With the Tunebox banner (stage 5 onwards), play a Trending song so it shows real artwork.
+  if (await page.evaluate(() => !!document.getElementById('tb-hero'))) {
+    const played = await page.evaluate(() => {
+      const card = document.querySelector('#sp-trend > .sp-card');
+      if (!card) return false;
+      card.click(); // brings it to the middle of the cover flow
+      card.click(); // plays it
+      return true;
+    });
+    if (played) await page.waitForTimeout(9000); // the song streams in
+    await page.evaluate(() => { document.getElementById('main-content').scrollTop = 0; });
+  }
   await shot('01-home');
+  if (await page.evaluate(() => !!document.getElementById('tb-hero'))) {
+    await page.evaluate(() => { document.getElementById('main-content').scrollTop = 480; });
+    await shot('01b-home-sections');
+    await page.evaluate(() => { const s = document.querySelector('#sp-trend-sec .tb-view-switch button[data-view="grid"]'); if (s) s.click(); });
+    await page.evaluate(() => { document.getElementById('sp-trend-sec').scrollIntoView({ block: 'start' }); });
+    await shot('01c-home-grid');
+    await page.evaluate(() => { const s = document.querySelector('#sp-trend-sec .tb-view-switch button[data-view="list"]'); if (s) s.click(); });
+    await shot('01d-home-list');
+    await page.evaluate(() => { const s = document.querySelector('#sp-trend-sec .tb-view-switch button[data-view="flow"]'); if (s) s.click(); });
+    await page.evaluate(() => { document.getElementById('main-content').scrollTop = 0; });
+  }
 
   await go('nav-local');
   await shot('02-local-files');
@@ -81,13 +104,18 @@ test('capture screens', async () => {
   await shot('06b-search-scrolled');
   await page.evaluate(() => { document.getElementById('main-content').scrollTop = 0; });
 
-  await go('nav-settings');
+  // Settings opens from the account row's gear (Riff's own Settings button) since stage 3.
+  await go('btn-sb-settings');
   await shot('07-settings');
+  await page.keyboard.press('Escape');
 
   await go('nav-discover');
-  await page.locator('#btn-toggle-lyrics-panel').click();
+  // Open (Riff opens it by itself when a song starts), capture, then close.
+  const panelOpen = () => page.evaluate(() => !document.getElementById('right-panel').classList.contains('hidden'));
+  if (!(await panelOpen())) await page.locator('#btn-toggle-lyrics-panel').click();
   await shot('08-lyrics-panel');
   await page.locator('#btn-toggle-lyrics-panel').click();
+  await shot('08b-panel-closed');
 
   // The light theme, when the Tunebox look is present (stage 2 onwards).
   const hasTunebox = await page.evaluate(() => !!(window.Tunebox && window.Tunebox.appearance));
@@ -97,7 +125,7 @@ test('capture screens', async () => {
     await shot('11-light-home');
     await go('nav-local');
     await shot('12-light-local-files');
-    await go('nav-settings');
+    await go('btn-sb-settings');
     await shot('13-light-settings');
     await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'dark' }));
   }
@@ -135,10 +163,13 @@ test('capture screens', async () => {
       await page.evaluate(() => window.Tunebox.appearance.set({ theme: 'dark' }));
     }
 
-    await go('btn-mini-player');
-    await page.waitForTimeout(2000); // the window shrinks to the mini player
-    await shot('17-mini-player');
-    await go('btn-mini-player');
-    await page.waitForTimeout(2000);
+    // The mini player stays on top of other windows, so it's left out of background (page) captures.
+    if (process.env.RIFF_CAPTURE !== 'page') {
+      await go('btn-mini-player');
+      await page.waitForTimeout(2000); // the window shrinks to the mini player
+      await shot('17-mini-player');
+      await go('btn-mini-player');
+      await page.waitForTimeout(2000);
+    }
   }
 });

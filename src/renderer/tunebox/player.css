@@ -184,11 +184,17 @@
 /* Saved to Liked songs: Tunebox's accent heart. */
 #tb body:not(.mini) #playbar #btn-toggle-fav:has(#fav-icon[fill='currentColor']) { color: var(--accent) !important; }
 /* Riff's extra track actions (edit, download, share) appear when the pointer is over this end of the dock. */
-#tb body:not(.mini) #playbar :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) {
+/* Until then they take no room, so the title keeps its width. */
+#tb body:not(.mini) #playbar .playbar-left:not(:hover):not(:has(:focus-visible)) :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) {
+  width: 0 !important;
+  margin-left: -10px !important; /* cancels the row's gap */
+  overflow: hidden !important;
   opacity: 0;
+  pointer-events: none;
+}
+#tb body:not(.mini) #playbar :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) {
   transition: opacity 0.15s, color 0.12s, background 0.12s !important;
 }
-#tb body:not(.mini) #playbar .playbar-left:is(:hover, :has(:focus-visible)) :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) { opacity: 1; }
 #tb body:not(.mini) #playbar :is(#btn-edit-current-track, #btn-playbar-more, #btn-playbar-share) svg { width: 15px !important; height: 15px !important; }
 
 /* ---------- Centre: transport and progress ---------- */

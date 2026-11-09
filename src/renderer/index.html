@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="tunebox/tokens.css">
   <link rel="stylesheet" href="tunebox/shell.css">
   <link rel="stylesheet" href="tunebox/player.css">
+  <link rel="stylesheet" href="tunebox/home.css">
+  <link rel="stylesheet" href="tunebox/panel.css">
   <script>document.documentElement.dataset.theme = 'dark';</script>
   <script>if (/Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '')) document.documentElement.classList.add('platform-darwin');</script>
   <style id="tg-account-critical-css">
@@ -637,6 +639,44 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
         <div class="home-ambient" id="home-ambient"><div class="home-ambient-layer"></div><div class="home-ambient-layer"></div></div>
         <div class="discover-content" id="discover-empty">
           <div id="discover-home" style="display: contents;">
+
+          <!-- Tunebox Home: greeting and the "Now Playing / Jump Back In" banner (tunebox/home.js fills them). -->
+          <div class="tb-home-glow" id="tb-home-glow" aria-hidden="true"></div>
+          <header class="tb-home-head" id="tb-home-head">
+            <h1 class="tb-greeting"><span id="tb-greeting-text">Hello</span><span class="tb-greeting-name" id="tb-greeting-name"></span></h1>
+            <div class="tb-home-tools">
+              <button type="button" class="tb-btn tb-btn-ghost tb-btn-small" id="tb-btn-edit-home" title="Choose which sections Home shows">Edit Home</button>
+              <button type="button" class="tb-icon-btn" id="tb-btn-home-appearance" title="Customize appearance" aria-label="Customize appearance"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+            </div>
+          </header>
+          <section class="tb-hero" id="tb-hero" hidden>
+            <div class="tb-hero-backdrop" id="tb-hero-backdrop"></div>
+            <div class="tb-hero-glow"></div>
+            <div class="tb-hero-body">
+              <button type="button" class="tb-hero-art" id="tb-hero-art-btn" title="Open now playing" aria-label="Open now playing"><img id="tb-hero-art" alt="" hidden><span class="tb-art-placeholder"></span></button>
+              <div class="tb-hero-text">
+                <div class="tb-hero-label" id="tb-hero-label">Jump Back In</div>
+                <div class="tb-hero-title" id="tb-hero-title"></div>
+                <div class="tb-hero-by"><span id="tb-hero-artist"></span><span class="tb-hero-album" id="tb-hero-album"></span></div>
+                <div class="tb-hero-lyric" id="tb-hero-lyric" hidden></div>
+                <div class="tb-hero-progress" id="tb-hero-progress" title="Click to jump">
+                  <span id="tb-hero-time">0:00</span>
+                  <div class="tb-hero-bar"><div id="tb-hero-fill"></div></div>
+                  <span id="tb-hero-duration">0:00</span>
+                </div>
+                <div class="tb-hero-actions">
+                  <button type="button" class="tb-icon-btn" id="tb-hero-prev" title="Previous" aria-label="Previous"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 5v14L9 12zM6 5h2v14H6z"/></svg></button>
+                  <button type="button" class="tb-hero-play" id="tb-hero-play" title="Play" aria-label="Play"><svg class="tb-i-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><svg class="tb-i-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+                  <button type="button" class="tb-icon-btn" id="tb-hero-next-btn" title="Next" aria-label="Next"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5v14l9-7zM16 5h2v14h-2z"/></svg></button>
+                  <button type="button" class="tb-btn tb-btn-ghost tb-btn-small tb-hero-lyrics-btn" id="tb-hero-lyrics">Lyrics</button>
+                </div>
+              </div>
+              <div class="tb-hero-next" id="tb-hero-next" hidden>
+                <div class="tb-hero-next-label">Up Next</div>
+                <div class="tb-hero-next-list" id="tb-hero-next-list"></div>
+              </div>
+            </div>
+          </section>
 
           <div class="home-hero" id="home-hero">
             <div class="home-hero-track" id="home-hero-track">
@@ -4736,5 +4776,6 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
   <script src="app.js"></script>
   <script src="tunebox/shell.js"></script>
   <script src="tunebox/player.js"></script>
+  <script src="tunebox/home.js"></script>
 </body>
 </html>
