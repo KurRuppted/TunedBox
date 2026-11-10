@@ -34,8 +34,9 @@
   border-radius: 14px !important;
   background: var(--menu) !important;
   box-shadow: var(--shadow) !important;
-  -webkit-backdrop-filter: blur(30px) saturate(1.8);
-  backdrop-filter: blur(30px) saturate(1.8);
+  /* !important: Riff's styles.css sets backdrop-filter: none !important on .playbar. */
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+  backdrop-filter: blur(30px) saturate(1.8) !important;
   overflow: visible !important;
   transform: none !important;
   z-index: 3000 !important;
@@ -43,8 +44,8 @@
 }
 #tb body.perf:not(.mini) #playbar,
 #tb body.no-panel-blur:not(.mini) #playbar {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   background: var(--tb-dock-solid) !important;
 }
 /* Riff's decorative glow along the bar's edge has no place on the dock. */

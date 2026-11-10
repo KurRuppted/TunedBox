@@ -159,6 +159,9 @@
 #tb body.hide-albums-tab:not(.mini) #sidebar #nav-albums,
 #tb body:not(.mini) #sidebar .nav-item.nav-collapsed { display: none !important; }
 #tb body:not(.mini) #sidebar :is(.nav-item, .tb-side-item).active { background: var(--selected) !important; }
+/* Riff keeps the page you came from highlighted on playlist, album and artist pages; Tunebox highlights
+   only the current page (a playlist's own row, or nothing for albums and artists). */
+#tb body:not(.mini):has(:is(#view-playlist-detail, #view-album, #view-artist).active) #sidebar .nav-item.active:not(:hover) { background: none !important; }
 #tb body:not(.mini) #sidebar :is(.nav-item, .tb-side-item)::before,
 #tb body:not(.mini) #sidebar :is(.nav-item, .tb-side-item)::after { display: none !important; }
 

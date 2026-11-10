@@ -76,12 +76,14 @@
   setSidebarHidden(store.get('tunebox.sidebarHidden') === '1', false);
   if (sidebarBtn) sidebarBtn.addEventListener('click', () => setSidebarHidden(!root.classList.contains('tb-sidebar-hidden'), true));
 
-  // Now Playing: Riff's now-playing panel on the right.
+  // Now Playing: Riff's now-playing panel on the right. It toggles the panel rather than opening a page,
+  // so it never takes the sidebar's selected look (Tunebox highlights only the current page);
+  // aria-pressed says whether the panel is open.
   const nowBtn = $('tb-nav-now-playing');
   const panel = $('right-panel');
   const panelToggle = $('btn-toggle-lyrics-panel');
   function syncNowPlaying() {
-    if (nowBtn && panel) nowBtn.classList.toggle('active', !panel.classList.contains('hidden'));
+    if (nowBtn && panel) nowBtn.setAttribute('aria-pressed', String(!panel.classList.contains('hidden')));
   }
   if (nowBtn && panelToggle) nowBtn.addEventListener('click', () => panelToggle.click());
   if (panel) new MutationObserver(syncNowPlaying).observe(panel, { attributes: true, attributeFilter: ['class'] });

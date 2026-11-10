@@ -82,9 +82,26 @@ test('Now Playing opens and closes the right panel', async () => {
   const before = await open();
   await page.locator('#tb-nav-now-playing').click();
   await expect.poll(open).toBe(!before);
-  await expect(page.locator('#tb-nav-now-playing')).toHaveClass(before ? /^(?!.*\bactive\b)/ : /\bactive\b/);
+  // It toggles a panel, not a page, so it never looks selected; aria-pressed carries the state.
+  await expect(page.locator('#tb-nav-now-playing')).toHaveAttribute('aria-pressed', String(!before));
+  await expect(page.locator('#tb-nav-now-playing')).not.toHaveClass(/\bactive\b/);
   await page.locator('#tb-nav-now-playing').click();
   await expect.poll(open).toBe(before);
+});
+
+test('only the current page is highlighted in the sidebar', async () => {
+  const lit = () => page.evaluate(() => [...document.querySelectorAll('#sidebar :is(.nav-item, .tb-side-item, .sb-lib-row)')]
+    .filter((e) => { const bg = getComputedStyle(e).backgroundColor; return bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent'; })
+    .map((e) => e.id || e.dataset.playlistId));
+  await page.mouse.move(900, 500); // keep the pointer off the sidebar so no row shows its hover look
+  await page.evaluate(() => document.getElementById('nav-local').click());
+  await expect.poll(lit).toEqual(['nav-local']);
+  // Opened from My files, a playlist page lights only its own row.
+  await page.evaluate(() => document.querySelector('#sidebar-library-feed .sb-lib-row[data-playlist-id="pl_t1"]').click());
+  await expect.poll(activeView).toBe('view-playlist-detail');
+  await expect.poll(lit).toEqual(['pl_t1']);
+  await page.evaluate(() => document.getElementById('nav-discover').click());
+  await expect.poll(lit).toEqual(['nav-discover']);
 });
 
 test('the sidebar hides and shows, and remembers', async () => {

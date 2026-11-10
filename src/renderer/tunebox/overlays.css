@@ -1,0 +1,316 @@
+/* Tunebox stage 8: Riff's right-click menus, pop-up menus, toasts and dialogs in Tunebox's look.
+   Sources: tunebox-design/2-app-shell (ContextMenu, Toasts, Dialogs) and 1-foundation (.sheet, .btn). */
+
+/* ---------- Right-click menu (Riff's .riff-ctx-menu): Tunebox's frosted text menu ---------- */
+#tb .riff-ctx-menu {
+  min-width: 200px !important;
+  padding: 5px !important;
+  gap: 0 !important;
+  border-radius: 10px !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+  backdrop-filter: blur(30px) saturate(1.8) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  transform-origin: top left;
+  transition: opacity 0.12s var(--ease) !important;
+}
+#tb .riff-ctx-menu.open { animation: tb-menu-in 0.12s var(--ease); }
+@keyframes tb-menu-in { from { opacity: 0; transform: scale(0.97); } }
+#tb .riff-ctx-item {
+  gap: 0 !important;
+  min-height: 24px !important;
+  padding: 3px 10px !important;
+  border-radius: 5px !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  transition: none !important;
+}
+/* Tunebox's menus are text only. */
+#tb .riff-ctx-item svg { display: none !important; }
+#tb .riff-ctx-item:hover { background: var(--accent) !important; color: var(--on-accent) !important; }
+#tb .riff-ctx-item:active { transform: none !important; }
+#tb .riff-ctx-item.danger { color: var(--danger) !important; }
+#tb .riff-ctx-item.danger:hover { background: var(--danger) !important; color: #fff !important; }
+#tb .riff-ctx-divider { height: 0.5px !important; margin: 4px 10px !important; background: var(--separator) !important; }
+#tb body.perf .riff-ctx-menu { background: var(--window) !important; }
+
+/* The "right-click for more" hint that appears over a track row. */
+#tb .riff-tg-tip {
+  padding: 5px 10px !important;
+  border-radius: 7px !important;
+  background: rgb(40 40 42 / 0.88) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25) !important;
+  font-family: var(--font) !important;
+  font-size: calc(12px * var(--fs, 1)) !important;
+  font-weight: 500 !important;
+}
+
+/* ---------- Pop-up menus everywhere (Riff's .m3-dropdown-menu), same as in Settings ---------- */
+#tb :is(#main-content, .modal-backdrop) .m3-dropdown-menu {
+  padding: 5px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+  backdrop-filter: blur(30px) saturate(1.8) !important;
+}
+#tb :is(#main-content, .modal-backdrop) .m3-dropdown-option {
+  min-height: 24px !important;
+  height: auto !important;
+  padding: 3px 10px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: none !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 400 !important;
+}
+#tb :is(#main-content, .modal-backdrop) .m3-dropdown-option:hover { background: var(--accent) !important; color: var(--on-accent) !important; }
+#tb :is(#main-content, .modal-backdrop) .m3-dropdown-option.selected { color: var(--accent) !important; font-weight: 550 !important; }
+#tb :is(#main-content, .modal-backdrop) .m3-dropdown-option.selected:hover { color: var(--on-accent) !important; }
+
+/* ---------- Toasts: Tunebox's dark HUD above the dock, in both themes ---------- */
+#tb body:not(.mini) #toast-container {
+  top: auto !important;
+  bottom: calc(var(--tb-dock-h, 70px) + 70px) !important;
+  left: var(--tb-left) !important;
+  right: var(--tb-right, 0px) !important;
+  transform: none !important;
+  gap: 8px !important;
+}
+#tb #toast-container .riff-toast {
+  min-width: 0 !important;
+  max-width: 520px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  gap: 8px !important;
+  align-items: center !important;
+  transform-origin: bottom center;
+  animation: tb-toast-in 0.2s var(--ease) both !important;
+}
+#tb #toast-container .riff-toast.leaving { animation: tb-toast-out 0.18s ease forwards !important; }
+@keyframes tb-toast-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes tb-toast-out { to { opacity: 0; transform: translateY(4px); } }
+/* Riff draws the droplet's curved shoulders with these. */
+#tb #toast-container .riff-toast::before,
+#tb #toast-container .riff-toast::after { display: none !important; }
+#tb #toast-container .toast-row {
+  gap: 8px !important;
+  min-height: 0 !important;
+  padding: 8px 16px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: rgb(40 40 42 / 0.88) !important;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.3) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+}
+#tb #toast-container .toast-row + .toast-row { border-top: 0 !important; }
+/* Tunebox's toasts are text only; errors keep a small red mark so they still stand out. */
+#tb #toast-container .toast-row:not(.error) .toast-icon { display: none !important; }
+#tb #toast-container .toast-row.error .toast-icon { width: 16px !important; height: 16px !important; color: #ff6961 !important; }
+#tb #toast-container .toast-row.error .toast-icon svg { width: 16px !important; height: 16px !important; }
+#tb #toast-container .toast-text {
+  color: #fff !important;
+  font-family: var(--font) !important;
+  font-size: calc(12.5px * var(--fs, 1)) !important;
+  font-weight: 500 !important;
+  text-align: center !important;
+}
+#tb #toast-container .toast-badge { background: rgb(255 255 255 / 0.18) !important; color: #fff !important; }
+
+/* ---------- Dialogs: Tunebox's sheet, near the top of the window ---------- */
+#tb .modal-backdrop:has(> :is(.dialog-card, .modal-card, .cache-modal-card, .custom-lyrics-card)) {
+  align-items: flex-start !important;
+  padding-top: 64px !important;
+  box-sizing: border-box !important;
+  background: rgb(0 0 0 / 0.22) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+#tb .modal-backdrop > :is(.dialog-card, .modal-card, .cache-modal-card, .custom-lyrics-card) {
+  max-width: 92vw !important;
+  max-height: calc(100vh - 100px) !important;
+  padding: 18px 20px 16px !important;
+  gap: 12px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: var(--window) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.35), 0 0 0 0.5px var(--separator) !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+}
+/* Plain dialogs (no inline width) use Tunebox's 420px. */
+#tb .modal-backdrop > .dialog-card:not([style*='width']) { width: 420px !important; }
+#tb .modal-backdrop.hidden > :is(.dialog-card, .modal-card, .cache-modal-card, .custom-lyrics-card) { transform: translateY(-10px) scale(0.98) !important; }
+#tb .modal-backdrop.visible > :is(.dialog-card, .modal-card, .cache-modal-card, .custom-lyrics-card) { transform: none !important; }
+
+#tb .modal-backdrop > :is(.dialog-card, .modal-card, .cache-modal-card, .custom-lyrics-card) :is(h2, h3, .modal-title) {
+  margin: 0 !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(17px * var(--fs, 1)) !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.01em !important;
+  overflow-wrap: anywhere;
+}
+#tb .modal-backdrop > :is(.dialog-card, .modal-card) :is(p, .dialog-body) { color: var(--text-2) !important; line-height: 1.45 !important; }
+#tb .modal-backdrop :is(.dialog-label, .field-label) {
+  margin: 0 !important;
+  color: var(--text-2) !important;
+  font-size: calc(12px * var(--fs, 1)) !important;
+  font-weight: 600 !important;
+}
+#tb .modal-backdrop .dialog-inputs { gap: 5px !important; }
+#tb .modal-backdrop .dialog-inputs > .dialog-label:not(:first-child) { margin-top: 7px !important; }
+
+/* Text fields */
+#tb .modal-backdrop :is(.pill-text-input, textarea, input[type='text'], input[type='url'], input[type='search'], input:not([type])):not(.m3-dropdown-search) {
+  min-height: 28px !important;
+  padding: 6px 9px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  outline: none !important;
+  background: var(--fill) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+}
+#tb .modal-backdrop :is(.pill-text-input, textarea, input[type='text'], input[type='url'], input[type='search'], input:not([type])):not(.m3-dropdown-search):focus {
+  background: var(--window) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 0 0.5px var(--separator) !important;
+}
+
+/* Buttons: Tunebox's ghost (grey), primary (accent) and danger (red) */
+#tb .modal-backdrop .dialog-actions { gap: 8px !important; margin-top: 4px !important; }
+#tb .modal-backdrop :is(.btn-outline-pill, .btn-pill-primary) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 28px !important;
+  min-height: 0 !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  box-shadow: none !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 550 !important;
+  transform: none !important;
+}
+#tb .modal-backdrop .btn-outline-pill { background: var(--fill) !important; color: var(--text) !important; }
+#tb .modal-backdrop .btn-outline-pill:hover { background: var(--fill-2) !important; }
+#tb .modal-backdrop .btn-pill-primary { background: var(--accent) !important; color: var(--on-accent) !important; box-shadow: 0 1px 1.5px rgb(0 0 0 / 0.15) !important; }
+#tb .modal-backdrop .btn-pill-primary:hover { background: var(--accent-hover) !important; }
+#tb .modal-backdrop .btn-pill-primary:active { filter: brightness(0.9); }
+#tb .modal-backdrop :is(.btn-outline-pill, .btn-pill-primary):disabled { opacity: 0.5 !important; pointer-events: none !important; }
+#tb .modal-backdrop :is(.btn-outline-pill, .btn-pill-primary) svg { width: 14px !important; height: 14px !important; }
+#tb .modal-backdrop :is(.btn-outline-pill, .btn-pill-primary)::before,
+#tb .modal-backdrop :is(.btn-outline-pill, .btn-pill-primary)::after { display: none !important; }
+/* Riff's delete confirmations use its blue primary button; Tunebox uses red for destructive actions. */
+#tb :is(#btn-confirm-delete-playlist, #btn-confirm-delete-preset, #btn-confirm-clear-offline) { background: #e5484d !important; color: #fff !important; }
+#tb :is(#btn-confirm-delete-playlist, #btn-confirm-delete-preset, #btn-confirm-clear-offline):hover { background: #d93d42 !important; }
+
+/* Pop-up buttons inside dialogs (import targets, download quality) */
+#tb .modal-backdrop .m3-dropdown-trigger {
+  height: 28px !important;
+  min-height: 0 !important;
+  padding: 0 8px 0 10px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: var(--fill) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  transform: none !important;
+}
+#tb .modal-backdrop .m3-dropdown-trigger:hover { background: var(--fill-2) !important; }
+
+/* Messages: Riff gives them an inline bottom margin; the dialog's gap already spaces them. */
+#tb .modal-backdrop > .dialog-card > p { margin: 0 !important; }
+
+/* Tab switches inside dialogs (New playlist / Import): Tunebox's segmented control */
+#tb .modal-backdrop .sp-modes {
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 2px !important;
+  border-radius: 8px !important;
+  background: var(--fill) !important;
+}
+#tb .modal-backdrop .sp-modes button {
+  height: 24px !important;
+  padding: 0 16px !important;
+  border-radius: 6px !important;
+  background: none !important;
+  color: var(--text-2) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  font-weight: 500 !important;
+}
+#tb .modal-backdrop .sp-modes button:hover:not(.active) { color: var(--text) !important; }
+#tb .modal-backdrop .sp-modes button.active {
+  background: var(--window) !important;
+  color: var(--text) !important;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 0 0 0.5px var(--separator) !important;
+}
+#tb[data-theme='dark'] .modal-backdrop .sp-modes button.active { background: #5a5a5e !important; }
+#tb #create-playlist-modal #cpm-pane-new { display: flex; flex-direction: column; gap: 12px; }
+#tb #create-playlist-modal #cpm-pane-new.hidden { display: none; }
+#tb #create-playlist-modal #new-playlist-input { width: 100% !important; box-sizing: border-box !important; }
+#tb #create-playlist-modal .cpm-service-row {
+  padding: 7px 10px !important;
+  border-radius: 7px !important;
+  background: none !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+}
+#tb #create-playlist-modal .cpm-service-row:hover { background: var(--hover) !important; }
+#tb #create-playlist-modal .cpm-service-row img { width: 20px !important; height: 20px !important; }
+
+/* Add to playlist: the song being added, then Tunebox's pick list */
+#tb .modal-backdrop .add-playlist-track-preview {
+  padding: 6px 8px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--fill) !important;
+}
+#tb .modal-backdrop .add-playlist-track-preview-thumb { width: 36px !important; height: 36px !important; min-width: 36px !important; max-width: 36px !important; min-height: 36px !important; max-height: 36px !important; flex-basis: 36px !important; border-radius: 5px !important; background: var(--fill-2) !important; }
+#tb .modal-backdrop .add-playlist-track-preview-title { color: var(--text) !important; font-size: calc(13px * var(--fs, 1)) !important; font-weight: 550 !important; }
+#tb .modal-backdrop .add-playlist-track-preview-artist { color: var(--text-2) !important; font-size: calc(12px * var(--fs, 1)) !important; }
+#tb .modal-backdrop .playlist-pick-list { gap: 0 !important; margin: 0 -8px !important; color: var(--text-2); }
+#tb .modal-backdrop .playlist-pick-item {
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  padding: 5px 8px !important;
+  gap: 10px !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: none !important;
+  color: var(--text) !important;
+  transform: none !important;
+}
+#tb .modal-backdrop .playlist-pick-item:hover { background: var(--hover) !important; }
+#tb .modal-backdrop .playlist-pick-item :is(.playlist-pick-thumb, .playlist-cover-art) { width: 36px !important; height: 36px !important; min-width: 36px !important; border-radius: 5px !important; }
+#tb .modal-backdrop .playlist-pick-name { color: var(--text) !important; font-size: calc(13px * var(--fs, 1)) !important; font-weight: 500 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  #tb :is(.riff-ctx-menu.open, #toast-container .riff-toast, #toast-container .riff-toast.leaving) { animation: none !important; }
+}
