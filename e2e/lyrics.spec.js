@@ -103,7 +103,8 @@ test('right panel shows Tunebox lyrics in place of Riff\'s', async () => {
   expect(s.timing).toBe('In sync');
 
   // Clicking a line jumps there.
-  await page.locator('#right-panel .tb-lyric-line', { hasText: 'Line 8 with' }).click({ force: true });
+  // A DOM click: the lines are still sliding into place, so a click at a point can land on the wrong one.
+  await page.locator('#right-panel .tb-lyric-line', { hasText: 'Line 8 with' }).evaluate((e) => e.click());
   await expect.poll(() => page.evaluate(() => Math.round(document.getElementById('native-audio').currentTime))).toBe(20);
   await at(14.7);
 });

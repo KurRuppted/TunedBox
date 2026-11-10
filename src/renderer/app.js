@@ -22822,6 +22822,8 @@ function bindCoverHoldZoom(wrapEl) {
         closeModal(topModal);
         return;
       }
+      // Tunebox Focus mode closes its own sheets and itself.
+      if (tbFocus() && tbFocus().isOpen()) return;
       const tvkPanel = document.getElementById('tvk-panel');
       if (state.isTvKaraokeOpen && tvkPanel && tvkPanel.classList.contains('open')) {
         e.preventDefault();
