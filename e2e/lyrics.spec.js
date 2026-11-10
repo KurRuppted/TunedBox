@@ -162,6 +162,45 @@ test('Customize on Stage opens Tunebox\'s Stage settings', async () => {
   await page.evaluate(() => window.Tunebox.appearance.set({ eqStyle: 'bars', eqMode: 'rainbow' }));
 });
 
+test('the Appearance Lyrics tab sets the lyric font, colors and wheel', async () => {
+  await page.evaluate(() => window.Tunebox.appearancePanel.open('lyrics'));
+  const sheet = page.locator('#tb-appearance');
+  await expect(sheet).toBeVisible();
+  expect(await sheet.locator('.tb-sheet-tabs button').allTextContents()).toEqual(['Themes', 'General', 'Lyrics', 'Stage']);
+  await expect(sheet.locator('.tb-sheet-tabs button.on')).toHaveText('Lyrics');
+  await expect(sheet.locator('.tb-lyric-preview .tb-lp-sung')).toHaveText('Sung words glow');
+  await expect(sheet.locator('.tb-lyric-preview .tb-stage-word.tb-gold')).toHaveText('highlight');
+  // Default + Tunebox's six fonts; three wheel lines each side of the sung one.
+  await expect(sheet.locator('.tb-font-tile')).toHaveCount(7);
+  await expect(sheet.locator('.tb-wheel-line')).toHaveCount(7);
+
+  // A font reaches the preview and Stage.
+  await sheet.locator('.tb-font-tile', { hasText: 'Oswald' }).click({ force: true });
+  expect(await page.evaluate(() => window.Tunebox.appearance.get().lyricFont)).toBe('oswald');
+  await expect(sheet.locator('.tb-lyric-preview')).toHaveAttribute('data-lyric-font', '1');
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.querySelector('.tb-lyric-preview')).fontFamily)).toMatch(/Oswald/);
+  await expect(page.locator('.tb-focus .tb-stage[data-lyric-font]')).toHaveCount(1);
+
+  // Custom colors show Tunebox's three swatches and colour the sung words.
+  await sheet.locator('.tb-segmented button', { hasText: 'Custom' }).click({ force: true });
+  await expect(sheet.locator('.tb-lyric-swatch')).toHaveCount(3);
+  await page.evaluate(() => window.Tunebox.appearance.set({ lyricColors: { sung: '#ff0000', unsung: '#ffffff', highlight: '#f5c542' } }));
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.querySelector('#tb-appearance .tb-lp-sung')).color)).toBe('rgb(255, 0, 0)');
+
+  // The wheel: fewer lines, then Reset.
+  const lines = sheet.locator('.tb-size-row', { hasText: 'Lines shown' }).locator('input');
+  await lines.evaluate((i) => { i.value = '1'; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); });
+  expect(await page.evaluate(() => window.Tunebox.appearance.get().wheelLines)).toBe(1);
+  await expect(sheet.locator('.tb-wheel-line')).toHaveCount(3);
+  await sheet.locator('.tb-sheet-block', { hasText: 'Lyrics wheel' }).locator('button', { hasText: 'Reset' }).click({ force: true });
+  await expect(sheet.locator('.tb-wheel-line')).toHaveCount(7);
+
+  await press('Escape');
+  await expect(sheet).toBeHidden();
+  await expect(page.locator('.tb-focus')).toHaveCount(1);
+  await page.evaluate(() => window.Tunebox.appearance.set({ lyricFont: 'default', lyricColorMode: 'default' }));
+});
+
 test('L cycles the layouts and they keep Tunebox\'s pieces', async () => {
   await press('l');
   expect(await layoutOf()).toBe('split');

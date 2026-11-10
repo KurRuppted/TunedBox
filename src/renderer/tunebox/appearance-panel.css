@@ -175,3 +175,27 @@
 #tb .tb-eq-add { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: calc(18px * var(--fs, 1)); color: var(--text-2); background: var(--fill); }
 #tb .tb-eq-add:hover { background: var(--fill-2); color: var(--text); }
 #tb .tb-eq-color .tb-color-input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+
+/* Lyrics tab (Tunebox foundation.css: the Lyrics section of the Appearance sheet, and the wheel preview) */
+#tb .tb-sheet .tb-sheet-sublabel { margin: 14px 0 8px; font-size: calc(12px * var(--fs, 1)); font-weight: 600; color: var(--text-2); }
+#tb .tb-sheet .tb-lyric-preview {
+  --fs: var(--fs-lyrics, 1);
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; padding: 16px 18px; border-radius: 10px; overflow: hidden;
+  background: linear-gradient(135deg, #1c1c22, #101014); font-size: calc(22px * var(--fs, 1)); font-family: var(--lyric-font, inherit);
+  box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 0.08);
+}
+#tb .tb-sheet .tb-lyric-preview-line { font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+#tb .tb-sheet .tb-lp-sung { color: var(--lyric-sung, #fff); text-shadow: 0 0 10px color-mix(in srgb, var(--lyric-glow, #fff) 45%, transparent); }
+#tb .tb-sheet .tb-lp-unsung { color: var(--lyric-unsung, #ffffff47); }
+#tb .tb-sheet .tb-lyric-preview[data-lyric-font] .tb-stage-word { font-family: var(--lyric-font); font-variation-settings: normal; }
+#tb .tb-sheet .tb-lyric-swatches { display: flex; gap: 22px; margin-top: 12px; }
+#tb .tb-sheet .tb-lyric-swatch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: calc(12px * var(--fs, 1)); color: var(--text-2); }
+#tb .tb-sheet .tb-wheel-preview {
+  display: flex; flex-direction: column; align-items: flex-start; padding: 18px 20px 10px; margin-bottom: 10px; border-radius: 10px;
+  background: linear-gradient(135deg, #1c1c22, #101014); color: #fff; perspective: 500px; perspective-origin: 50% 50%;
+  font-family: var(--lyric-font, inherit); overflow: hidden;
+}
+#tb .tb-sheet .tb-wheel-preview.center { align-items: center; }
+#tb .tb-sheet .tb-wheel-line { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: rgb(255 255 255 / 0.5); transform-origin: left center; transition: all 0.25s var(--ease); white-space: nowrap; }
+#tb .tb-sheet .tb-wheel-preview.center .tb-wheel-line { transform-origin: center; }
+#tb .tb-sheet .tb-wheel-line.active { color: #fff; }

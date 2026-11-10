@@ -1,6 +1,6 @@
 /* Tunebox Appearance sheet (stage 7): a plain-JS port of Tunebox's AppearancePanel with its Themes,
-   General and Stage tabs. Everything it changes goes through window.Tunebox.appearance / .themes
-   (tunebox/appearance.js). Tunebox's Home and Lyrics tabs are still to come. Opened from Home's
+   General, Lyrics and Stage tabs. Everything it changes goes through window.Tunebox.appearance / .themes
+   (tunebox/appearance.js). Tunebox's Home tab is still to come. Opened from Home's
    appearance button, Settings → Theme, and Focus mode's Customize chip on Stage.
    Exposed as window.Tunebox.appearancePanel.open(tab). Loaded after app.js. */
 (function () {
@@ -185,6 +185,124 @@
     ];
   }
 
+  // ---------- Lyrics tab (Tunebox's components/appearance/LyricsTab.tsx) ----------
+  const LYRIC_COLOR_MODES = [['default', 'Default'], ['album', 'Match Album'], ['custom', 'Custom']];
+  const LYRIC_SWATCHES = [
+    ['sung', 'Sung', 'Words as they are sung, and their glow'],
+    ['unsung', 'Upcoming', 'Words still to come (always shown faded)'],
+    ['highlight', 'Highlight', 'The big emphasised word in Stage']
+  ];
+  const ALIGNS = [['auto', 'Auto'], ['left', 'Left'], ['center', 'Center']];
+  const WHEEL_KEYS = ['wheelLines', 'wheelTilt', 'wheelBlur', 'wheelSpacing', 'wheelAlign'];
+
+  /** A sample lyric line on a dark strip, styled with the current lyric font and colours. */
+  function lyricPreview() {
+    const el = h('div', { class: 'tb-lyric-preview' },
+      h('span', { class: 'tb-lyric-preview-line' },
+        h('span', { class: 'tb-lp-sung' }, 'Sung words glow'), ' ', h('span', { class: 'tb-lp-unsung' }, 'while the rest wait')),
+      h('span', { class: 'tb-stage-word tb-gold tb-shown' }, 'highlight'));
+    const LV = window.Tunebox && window.Tunebox.lyricsView;
+    const apply = () => {
+      if (!LV || !LV.lyricStyle) return;
+      const { vars, customFont } = LV.lyricStyle(cover(), () => el.isConnected && apply());
+      for (const [k, v] of Object.entries(vars)) el.style.setProperty(k, v);
+      if (customFont) el.dataset.lyricFont = '1';
+    };
+    apply();
+    return el;
+  }
+
+  /** A side view of the lyrics wheel: how many lines show, and how they tilt, blur and space out. */
+  function wheelPreview(look) {
+    const rows = [];
+    for (let d = -look.wheelLines; d <= look.wheelLines; d++) rows.push(d);
+    return h('div', { class: `tb-wheel-preview ${look.wheelAlign === 'center' ? 'center' : ''}` }, rows.map((d) => {
+      const a = Math.abs(d);
+      return h('div', {
+        class: `tb-wheel-line ${d === 0 ? 'active' : ''}`,
+        style: {
+          transform: `translateZ(${-a * 45 * look.wheelTilt}px) rotateX(${-d * 13 * look.wheelTilt}deg) scale(${d ? 0.93 : 1})`,
+          opacity: String(d ? Math.max(0.05, 0.9 - a * (0.55 / (look.wheelLines + 0.4))) : 1),
+          filter: `blur(${a * 0.8 * look.wheelBlur * 0.6}px)`,
+          marginBottom: `${8 * look.wheelSpacing}px`
+        }
+      }, d === 0 ? 'The line being sung' : d < 0 ? 'An earlier line' : 'A line still to come');
+    }));
+  }
+
+  function lyricsTab() {
+    const look = A.get();
+    const art = cover();
+    const D = A.DEFAULTS;
+    const set = (patch) => { A.set(patch); render(); };
+    // Sliders change things live; the previews redraw once the slider is let go.
+    const settle = (row) => { row.querySelector('input').addEventListener('change', render); return row; };
+    const wheelSlider = (label, hint, key, step, format) => {
+      const [min, max, def] = A.RANGES[key];
+      return settle(sliderRow(label, hint, look[key], min, max, step, def, format, (v) => A.set({ [key]: key === 'wheelLines' ? Math.round(v) : v })));
+    };
+    const sizeSlider = (label, hint, key) => settle(sliderRow(label, hint, look.textSizes[key], A.TEXT_SIZE_MIN, A.TEXT_SIZE_MAX, 0.05, 1, percent,
+      (v) => A.set({ textSizes: Object.assign({}, A.get().textSizes, { [key]: v }) })));
+
+    const fontInput = h('input', { placeholder: 'e.g. Impact', value: look.lyricCustomFont || '', spellcheck: 'false' });
+    const fontLabel = h('label', { class: `tb-custom-font ${look.lyricFont === 'custom' ? 'on' : ''}` }, h('span', {}, 'Any installed font'), fontInput);
+    const fonts = h('div', { class: 'tb-font-grid' },
+      h('button', {
+        type: 'button', class: `tb-font-tile ${look.lyricFont === 'default' ? 'on' : ''}`, 'data-font': 'default',
+        title: 'Each lyrics view keeps its own styling (Stage mixes several typefaces)', onclick: () => set({ lyricFont: 'default' })
+      }, h('span', { class: 'tb-font-sample' }, 'Aa'), h('span', {}, 'Default')),
+      A.FONTS.map((f) => h('button', {
+        type: 'button', class: `tb-font-tile ${look.lyricFont === f.id ? 'on' : ''}`, 'data-font': f.id, onclick: () => set({ lyricFont: f.id })
+      }, h('span', { class: 'tb-font-sample', style: { fontFamily: f.stack } }, 'Aa'), h('span', {}, f.label))));
+    fontInput.addEventListener('input', () => {
+      const v = fontInput.value;
+      A.set({ lyricCustomFont: v, lyricFont: v.trim() ? 'custom' : 'default' });
+      const now = A.get().lyricFont;
+      fonts.querySelectorAll('.tb-font-tile').forEach((t) => t.classList.toggle('on', now === t.dataset.font));
+      fontLabel.classList.toggle('on', now === 'custom');
+    });
+    fontInput.addEventListener('change', render);
+
+    const swatches = look.lyricColorMode !== 'custom' ? null : h('div', { class: 'tb-lyric-swatches' },
+      LYRIC_SWATCHES.map(([key, label, hint]) => {
+        const input = h('input', { type: 'color', class: 'tb-color-input', value: look.lyricColors[key], tabindex: '-1', 'aria-hidden': 'true' });
+        const swatch = h('button', { type: 'button', class: 'tb-eq-swatch', 'data-swatch': key, style: { background: look.lyricColors[key] }, onclick: () => input.click() });
+        input.addEventListener('input', () => {
+          A.set({ lyricColors: Object.assign({}, A.get().lyricColors, { [key]: input.value }) });
+          swatch.style.background = input.value;
+        });
+        input.addEventListener('change', render);
+        return h('div', { class: 'tb-lyric-swatch', title: hint }, swatch, input, h('span', {}, label));
+      }));
+
+    const wheelChanged = WHEEL_KEYS.some((k) => look[k] !== D[k]);
+    return [
+      block('Lyrics', 'Font and colors for lyrics in Now Playing, Focus mode and Stage.', null,
+        lyricPreview(),
+        h('div', { class: 'tb-sheet-sublabel' }, 'Size'),
+        sizeSlider('Lyrics', 'Scrolling lyrics in Now Playing and Focus mode (the preview above grows with it)', 'lyrics'),
+        sizeSlider('Stage lyrics', 'The big poster words in Focus mode’s Stage layout', 'stage'),
+        h('div', { class: 'tb-sheet-sublabel' }, 'Font'),
+        fonts, fontLabel,
+        h('div', { class: 'tb-sheet-sublabel' }, 'Colors'),
+        segmented(look.lyricColorMode, LYRIC_COLOR_MODES, (lyricColorMode) => set({ lyricColorMode })),
+        look.lyricColorMode === 'album'
+          ? h('p', { class: 'tb-sheet-note gap' }, art ? 'Matches the cover of whatever is playing, changing with each song.' : 'Play a song to match its cover.')
+          : null,
+        swatches),
+      block('Lyrics wheel', 'How the scrolling lyrics in Now Playing and Focus mode roll past.',
+        h('button', { type: 'button', class: 'tb-btn tb-btn-ghost tb-btn-small', disabled: !wheelChanged, onclick: () => set(Object.fromEntries(WHEEL_KEYS.map((k) => [k, D[k]]))) }, 'Reset'),
+        wheelPreview(look),
+        wheelSlider('Lines shown', 'Lines visible above and below the one being sung. Scrolling shows them all.', 'wheelLines', 1, (v) => `${Math.round(v)} each side`),
+        wheelSlider('3D curve', 'How far lines tip back, like text on a turning drum. 0% is flat.', 'wheelTilt', 0.05, percent),
+        wheelSlider('Blur', 'Blur on lines away from the one being sung', 'wheelBlur', 0.05, percent),
+        wheelSlider('Line spacing', null, 'wheelSpacing', 0.05, percent),
+        h('div', { class: 'tb-sheet-row compact' },
+          h('span', { title: 'Auto: left beside the cover, centered when lyrics fill the screen' }, 'Alignment'),
+          segmented(look.wheelAlign, ALIGNS, (wheelAlign) => set({ wheelAlign }))))
+    ];
+  }
+
   // ---------- Stage tab (Tunebox's components/appearance/StageTab.tsx) ----------
   const VISUALIZER_MODES = [['rainbow', 'Rainbow'], ['accent', 'Accent'], ['artwork', 'Album Colors'], ['custom', 'Custom']];
   const EQ_STYLES = [['bars', 'Bars'], ['wave', 'Wave'], ['blocks', 'Blocks'], ['off', 'Off']];
@@ -272,7 +390,7 @@
   }
 
   // ---------- Sheet ----------
-  const TABS = [['themes', 'Themes'], ['general', 'General'], ['stage', 'Stage']];
+  const TABS = [['themes', 'Themes'], ['general', 'General'], ['lyrics', 'Lyrics'], ['stage', 'Stage']];
   let tab = 'general';
   let backdrop = null;
   let panel = null;
@@ -287,7 +405,7 @@
       b.setAttribute('aria-selected', String(on));
     });
     if (stopPreview) stopPreview();
-    panel.replaceChildren(...(tab === 'themes' ? themesTab() : tab === 'stage' ? stageTab() : generalTab()));
+    panel.replaceChildren(...(tab === 'themes' ? themesTab() : tab === 'stage' ? stageTab() : tab === 'lyrics' ? lyricsTab() : generalTab()));
     sheet.scrollTop = scroll;
   }
 

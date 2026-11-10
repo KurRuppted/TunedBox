@@ -341,6 +341,7 @@
     GRADIENTS,
     TEXT_SIZE_MIN,
     TEXT_SIZE_MAX,
+    RANGES,
     /** The font stack for a font id (or a custom installed font). */
     stackFor,
     /** The accent a look would have, as #rrggbb (theme previews). */
