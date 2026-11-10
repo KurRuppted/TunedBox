@@ -48,7 +48,7 @@ test('the Settings toggle switches the Tunebox theme', async () => {
   expect(await activeModes()).toEqual(['dark']);
 });
 
-test('retired accent controls are hidden and the notice is shown', async () => {
+test('retired accent controls are hidden and Settings → Theme leads to Appearance', async () => {
   const hidden = await page.evaluate(() =>
     [...document.querySelectorAll('.tb-retired')].map((e) => getComputedStyle(e).display));
   // Stage 2 retired six theme controls; stage 3 adds Classic sidebar and the Home button picture.
@@ -58,7 +58,49 @@ test('retired accent controls are hidden and the notice is shown', async () => {
   for (const id of ['slider-theme-intensity', 'slider-theme-hue', 'settings-custom-color-input', 'btn-intensity-bg']) {
     expect(await page.evaluate((i) => !!document.getElementById(i), id)).toBe(true);
   }
-  await expect(page.locator('.tb-appearance-notice')).toContainText('Appearance panel');
+  // Stage 7: the accent and the rest moved to the Appearance sheet, which Settings → Theme opens.
+  await expect(page.locator('#tb-setting-appearance')).toContainText('Appearance');
+  await expect(page.locator('#tb-btn-open-appearance')).toHaveCount(1);
+});
+
+test('the Appearance sheet changes the accent, mode and text size, and saves themes', async () => {
+  const look = () => page.evaluate(() => window.Tunebox.appearance.get());
+  const before = await look();
+  await page.evaluate(() => window.Tunebox.appearancePanel.open('general'));
+  const sheet = page.locator('#tb-appearance');
+  await expect(sheet).toBeVisible();
+
+  // Accent: the purple swatch.
+  await sheet.locator('.tb-swatch[title="Purple"]').click({ force: true });
+  expect((await look()).accent).toBe('purple');
+  await expect(sheet.locator('.tb-swatch[title="Purple"]')).toHaveClass(/\bon\b/);
+
+  // Mode: Light, then back.
+  await sheet.locator('.tb-segmented button', { hasText: 'Light' }).click({ force: true });
+  expect((await look()).theme).toBe('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+
+  // Text size: Interface at its smallest, then Reset.
+  await sheet.locator('.tb-size-row input[type="range"]').first().evaluate((el) => {
+    el.value = el.min;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  expect((await look()).textSizes.ui).toBeCloseTo(0.7);
+  await sheet.locator('button', { hasText: 'Reset' }).click({ force: true });
+  expect((await look()).textSizes.ui).toBe(1);
+
+  // Themes: save the current look, see it listed, delete it.
+  await sheet.locator('.tb-sheet-tabs button', { hasText: 'Themes' }).click({ force: true });
+  await sheet.locator('.tb-theme-input').first().fill('Test Look', { force: true });
+  await sheet.locator('button', { hasText: 'Save Current Look' }).click({ force: true });
+  await expect(sheet.locator('.tb-theme-name', { hasText: 'Test Look' })).toHaveCount(1);
+  await sheet.locator('.tb-theme-card', { hasText: 'Test Look' }).locator('button', { hasText: 'Delete' }).click({ force: true });
+  await expect(sheet.locator('.tb-theme-name', { hasText: 'Test Look' })).toHaveCount(0);
+
+  // Escape closes it; put the look back for the other tests.
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
+  await page.evaluate((b) => window.Tunebox.appearance.set(b), before);
 });
 
 test('Paper and Neon theme fonts are bundled', async () => {

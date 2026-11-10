@@ -56,7 +56,12 @@
   const editHome = $('tb-btn-edit-home');
   if (editHome) editHome.addEventListener('click', () => openSettings('advanced', '[data-adv="my_wave"]'));
   const lookBtn = $('tb-btn-home-appearance');
-  if (lookBtn) lookBtn.addEventListener('click', () => openSettings('theme'));
+  // The Tunebox Appearance sheet (stage 7), or Riff's Theme settings if it isn't there.
+  if (lookBtn) lookBtn.addEventListener('click', () => {
+    const panel = window.Tunebox && window.Tunebox.appearancePanel;
+    if (panel) panel.open('general');
+    else openSettings('theme');
+  });
 
   // ---------- Now Playing / Jump Back In ----------
   const hero = $('tb-hero');

@@ -8,11 +8,11 @@
    and !important). */
 
 /* ---------- Page ---------- */
-#tb body:not(.mini) #main-content:has(:is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums).active) {
+#tb body:not(.mini) #main-content:has(:is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums, #view-queue, #view-history).active) {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
-#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums) {
+#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums, #view-queue, #view-history) {
   position: relative !important;
   box-sizing: border-box !important;
   width: 100% !important;
@@ -25,9 +25,9 @@
   letter-spacing: -0.003em;
   color: var(--text);
 }
-#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums) * { box-sizing: border-box; }
+#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums, #view-queue, #view-history) * { box-sizing: border-box; }
 /* The cover glow reaches past the page's sides, as in Tunebox. */
-#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums).active { overflow: visible !important; }
+#tb #main-content :is(#view-playlist-detail, #view-favorites, #view-local, #view-album, #view-artist, #view-albums, #view-queue, #view-history).active { overflow: visible !important; }
 /* Riff runs its artist page from the window's top edge; here it sits under the toolbar like the rest. */
 #tb body:not(.mini) #main-content:has(#view-artist.active) { padding-top: var(--titlebar-h) !important; }
 
@@ -409,7 +409,7 @@
 #tb #main-content :is(#view-playlist-detail, #view-favorites) .sp-tracks-table-head { display: none !important; }
 
 /* ---------- Song list (Tunebox's striped list) ---------- */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) {
   /* renderTracks reads the row height from here to draw only the rows near the screen. */
   --tb-row-h: 42px;
   display: block !important;
@@ -421,7 +421,7 @@
   border: 0 !important;
   box-shadow: none !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row {
   display: grid !important;
   grid-template-columns: 28px 34px minmax(0, 1fr) auto 44px !important;
   grid-template-areas: 'num art main act dur' !important;
@@ -456,13 +456,13 @@
   grid-template-columns: 28px minmax(0, 1fr) auto 44px !important;
   grid-template-areas: 'num main act dur' !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row.tb-odd { background: var(--stripe) !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row:hover { background: var(--hover) !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row.track-selected { background: var(--selected) !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row::before { display: none !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row.tb-odd { background: var(--stripe) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row:hover { background: var(--hover) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row.track-selected { background: var(--selected) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row::before { display: none !important; }
 
 /* Number: a dot while playing, a play symbol on hover. */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-num {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-num {
   grid-area: num !important;
   position: relative !important;
   display: grid !important;
@@ -476,15 +476,15 @@
   font-size: calc(12px * var(--fs, 1)) !important;
   font-variant-numeric: tabular-nums !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-num-text {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-num-text {
   display: block !important;
   opacity: 1 !important;
   font: inherit !important;
   color: inherit !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .sp-playing-bars { display: none !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row.playing .track-num-text { font-size: 0 !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row.playing .track-num-text::before {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .sp-playing-bars { display: none !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row.playing .track-num-text { font-size: 0 !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row.playing .track-num-text::before {
   content: '';
   display: block;
   width: 6px;
@@ -492,7 +492,7 @@
   border-radius: 50%;
   background: var(--accent);
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-num::after {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-num::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -505,13 +505,13 @@
   opacity: 0;
   pointer-events: none;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row:hover .track-row-num::after { opacity: 1; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row:hover .track-num-text { opacity: 0 !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row:hover .track-row-num::after { opacity: 1; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row:hover .track-num-text { opacity: 0 !important; }
 /* Selecting songs (Riff's select mode) shows its check in place of the number. */
 #tb body.track-selection-mode #main-content .track-row-num::after { display: none; }
 
 /* Cover */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-thumb-wrap {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-thumb-wrap {
   grid-area: art !important;
   position: relative !important;
   display: grid !important;
@@ -525,7 +525,7 @@
   background: linear-gradient(135deg, var(--fill-2), var(--fill)) !important;
   box-shadow: 0 0 0 0.5px var(--art-edge) !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-thumb {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-thumb {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
@@ -534,10 +534,10 @@
   object-fit: cover !important;
   box-shadow: none !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-fallback-icon { width: 15px !important; height: 15px !important; color: var(--text-3) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-fallback-icon { width: 15px !important; height: 15px !important; color: var(--text-3) !important; }
 
 /* Title and artist */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-info {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-info {
   grid-area: main !important;
   display: flex !important;
   flex-direction: column !important;
@@ -547,7 +547,7 @@
   margin: 0 !important;
   padding: 0 !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-title {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-title {
   display: block !important;
   overflow: hidden !important;
   white-space: nowrap !important;
@@ -561,8 +561,8 @@
   letter-spacing: -0.003em !important;
   color: var(--text) !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row.playing .track-row-title { color: var(--accent) !important; font-weight: 600 !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-artist-wrap {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row.playing .track-row-title { color: var(--accent) !important; font-weight: 600 !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-artist-wrap {
   display: flex !important;
   align-items: center !important;
   gap: 0 !important;
@@ -571,7 +571,7 @@
   -webkit-mask-image: none !important;
   mask-image: none !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-artist {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-artist {
   min-width: 0 !important;
   overflow: hidden !important;
   white-space: nowrap !important;
@@ -583,9 +583,9 @@
   color: var(--text-2) !important;
   opacity: 1 !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-artist :is(a, span, button):hover { color: var(--text) !important; text-decoration: underline; text-decoration-color: var(--text-3); text-underline-offset: 2px; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-artist :is(a, span, button):hover { color: var(--text) !important; text-decoration: underline; text-decoration-color: var(--text-3); text-underline-offset: 2px; }
 /* The "E" badge: Tunebox's small square, after the artist line's start. */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .explicit-badge {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .explicit-badge {
   display: inline-grid !important;
   place-items: center !important;
   flex: none !important;
@@ -617,7 +617,7 @@
   color: var(--text-2) !important;
 }
 #tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list) :is(.track-row-col-plays, .track-row-col-date) { display: none !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-duration {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-duration {
   grid-area: dur !important;
   justify-self: end !important;
   min-width: 0 !important;
@@ -630,7 +630,7 @@
   color: var(--text-2) !important;
   opacity: 1 !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions {
   grid-area: act !important;
   display: flex !important;
   align-items: center !important;
@@ -643,8 +643,8 @@
   transform: none !important;
   transition: none !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row:is(:hover, :focus-within) .track-row-actions { opacity: 1 !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions .btn-icon-pill {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row:is(:hover, :focus-within) .track-row-actions { opacity: 1 !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions .btn-icon-pill {
   display: grid !important;
   place-items: center !important;
   width: 28px !important;
@@ -660,13 +660,13 @@
   opacity: 1 !important;
   transform: none !important;
 }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions .btn-icon-pill:hover { background: var(--hover) !important; color: var(--text) !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions .btn-icon-pill svg { width: 15px !important; height: 15px !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions .btn-fav:has(svg[fill='currentColor']) { color: var(--accent) !important; }
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list) .track-row-actions .delete-btn:hover { color: var(--danger) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions .btn-icon-pill:hover { background: var(--hover) !important; color: var(--text) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions .btn-icon-pill svg { width: 15px !important; height: 15px !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions .btn-fav:has(svg[fill='currentColor']) { color: var(--accent) !important; }
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #playlist-recs-list, #favorites-recs-list, #queue-tracks-list, #history-tracks-list, #search-tracks-list) .track-row-actions .delete-btn:hover { color: var(--danger) !important; }
 
 /* Empty list */
-#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list) .empty-hint {
+#tb #main-content :is(#playlist-tracks-list, #favorites-tracks-list, #local-tracks-list, #album-tracks-list, #artist-tracks-list, #queue-tracks-list, #history-tracks-list) .empty-hint {
   margin: 0 8px !important;
   padding: 0 !important;
   background: none !important;
@@ -763,7 +763,7 @@
   letter-spacing: -0.022em !important;
   color: var(--text) !important;
 }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) {
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)) !important;
   gap: 22px 18px !important;
@@ -773,8 +773,8 @@
   overflow: visible !important;
 }
 #tb #main-content #local-albums-row[style*='display: none'] { display: none !important; }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) > .empty-hint { grid-column: 1 / -1; padding: 0 !important; text-align: left !important; color: var(--text-2) !important; font-family: var(--font) !important; }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-card {
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) > .empty-hint { grid-column: 1 / -1; padding: 0 !important; text-align: left !important; color: var(--text-2) !important; font-family: var(--font) !important; }
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-card {
   display: block !important;
   width: auto !important;
   min-width: 0 !important;
@@ -789,7 +789,7 @@
   transform: none !important;
   cursor: default !important;
 }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-cover {
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-cover {
   display: block !important;
   width: 100% !important;
   height: auto !important;
@@ -801,9 +801,9 @@
   transition: filter 0.2s !important;
   transform: none !important;
 }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-card:hover .search-album-cover { filter: brightness(0.92) !important; }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-info { display: flex !important; flex-direction: column !important; gap: 0 !important; min-width: 0 !important; padding: 0 !important; text-align: left !important; }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-title {
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-card:hover .search-album-cover { filter: brightness(0.92) !important; }
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-info { display: flex !important; flex-direction: column !important; gap: 0 !important; min-width: 0 !important; padding: 0 !important; text-align: left !important; }
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-title {
   overflow: hidden !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
@@ -814,7 +814,7 @@
   color: var(--text) !important;
   -webkit-line-clamp: unset !important;
 }
-#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row) .search-album-sub {
+#tb #main-content :is(#saved-albums-grid, #artist-albums-grid, #local-albums-row, #search-albums-container .search-albums-row, #search-playlists-container .search-albums-row) .search-album-sub {
   overflow: hidden !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;

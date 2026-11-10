@@ -339,6 +339,12 @@
     ACCENTS,
     FONTS,
     GRADIENTS,
+    TEXT_SIZE_MIN,
+    TEXT_SIZE_MAX,
+    /** The font stack for a font id (or a custom installed font). */
+    stackFor,
+    /** The accent a look would have, as #rrggbb (theme previews). */
+    accentFor: (lookToShow, dark) => accentColor(lookToShow, dark),
     /** Loads the saved look (and saved themes) once Riff's storage is ready. */
     init() {
       state = load();

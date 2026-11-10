@@ -14,6 +14,9 @@
   <link rel="stylesheet" href="tunebox/player.css">
   <link rel="stylesheet" href="tunebox/home.css">
   <link rel="stylesheet" href="tunebox/browse.css">
+  <link rel="stylesheet" href="tunebox/pages.css">
+  <link rel="stylesheet" href="tunebox/settings.css">
+  <link rel="stylesheet" href="tunebox/appearance-panel.css">
   <link rel="stylesheet" href="tunebox/panel.css">
   <script>document.documentElement.dataset.theme = 'dark';</script>
   <script>if (/Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '')) document.documentElement.classList.add('platform-darwin');</script>
@@ -876,7 +879,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
 
       <section class="content-view" id="view-queue">
         <div class="view-header">
-          <h2>Playback queue</h2>
+          <h2>Queue</h2>
           <button class="btn-outline-pill" id="btn-clear-queue">Clear queue</button>
         </div>
         <div class="tracks-list" id="queue-tracks-list">
@@ -1768,11 +1771,14 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
               </div>
             </div>
 
-            <div class="setting-item tb-appearance-notice" role="note">
-              <div class="setting-item-top">
-                <span class="setting-name">Accent colour</span>
+            <div class="setting-item" id="tb-setting-appearance">
+              <div class="setting-item-top" style="align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span class="setting-name">Appearance</span>
+                  <span class="setting-hint">Themes, accent colour, album colours, fonts and text size</span>
+                </div>
+                <button type="button" class="btn-outline-pill" id="tb-btn-open-appearance">Open Appearance…</button>
               </div>
-              <span class="setting-hint">Accent colour, hue and intensity are moving to the new Appearance panel, coming in Stage 7. Until then, Tunebox uses its blue accent.</span>
             </div>
 
             <div class="setting-item tb-retired" id="setting-palette-style" hidden>
@@ -4779,5 +4785,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
   <script src="tunebox/player.js"></script>
   <script src="tunebox/home.js"></script>
   <script src="tunebox/browse.js"></script>
+  <script src="tunebox/pages.js"></script>
+  <script src="tunebox/appearance-panel.js"></script>
 </body>
 </html>

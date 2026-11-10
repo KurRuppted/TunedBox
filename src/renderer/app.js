@@ -11510,6 +11510,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   window.openAlbum = openAlbum;
+  // The Tunebox Appearance sheet (tunebox/appearance-panel.js) shows its messages with Riff's toasts.
+  window.showToast = showToast;
 
   function updateRowFade(row) {
     if (!row) return;
