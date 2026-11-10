@@ -89,7 +89,18 @@
   }
 
   const clamp01 = (n) => Math.min(1, Math.max(0, n));
-  const wordProgress = (w, t) => clamp01((t - w.start) / Math.max(1, w.end - w.start));
+  /** How far through word w the sweep is at time t (0..1). With syllable timing (Better Lyrics), the
+      sweep follows each syllable, weighted by its letters, instead of moving evenly across the word. */
+  function wordProgress(w, t) {
+    if (!w.syllables || !w.syllables.length) return clamp01((t - w.start) / Math.max(1, w.end - w.start));
+    const total = w.syllables.reduce((sum, s) => sum + s.chars, 0) || 1;
+    let done = 0;
+    for (const s of w.syllables) {
+      if (t < s.end) return clamp01((done + s.chars * clamp01((t - s.start) / Math.max(1, s.end - s.start))) / total);
+      done += s.chars;
+    }
+    return 1;
+  }
 
   /** Index of the line playing at time t, or -1 before the first line. */
   function findLine(lines, t) {

@@ -112,6 +112,7 @@ function i18nValueBroken(key, value) {
   return false;
 }
 const logger = require('../shared/logger');
+const lyricsSources = require('./lyrics-sources');
 const { getSystemAudioOutputInfo } = require('../shared/audio-output');
 
 let serverActiveProxy = '';
@@ -5539,9 +5540,35 @@ function hasBrokenLyricText(text) {
   return typeof text === 'string' && text.includes('\uFFFD');
 }
 
-function fetchLyricsDirect(title, artist) {
+// The old lookup returns synced text, plain text, or { instrumental: true }; the matched entry is turned into that.
+function lrclibEntryResult(entry) {
+  if (!entry) return null;
+  if (entry.instrumental) return { instrumental: true, syncedLyrics: '', plainLyrics: '' };
+  return entry.syncedLyrics || entry.plainLyrics || null;
+}
+
+// `opts`: { duration (seconds), album }. With a known duration, LRCLIB is first asked for the version
+// within 3 seconds of the song (lyrics-sources.js); without one, or if nothing is that close, the old
+// title/artist lookup runs, now preferring the closest length.
+async function fetchLyricsDirect(title, artist, opts = {}) {
+  const durationSec = Number(opts && opts.duration) || 0;
+  if (durationSec > 0) {
+    const matched = await lyricsSources.fetchLrclibMatched({
+      title: lyricsSources.cleanTitle(title) || title,
+      artist: String(artist || '').replace(/\s*-\s*topic$|vevo$/i, '').trim(),
+      album: (opts && opts.album) || '',
+      durationSec
+    }).catch(() => null);
+    const result = lrclibEntryResult(matched);
+    if (result) return result;
+  }
+  return fetchLyricsDirectByName(title, artist, durationSec);
+}
+
+function fetchLyricsDirectByName(title, artist, durationSec = 0) {
   return new Promise((resolve) => {
     const { cleanTitle, cleanArtist } = sanitizeForLyrics(title, artist);
+    const tooFar = (entry) => durationSec > 0 && entry && Number.isFinite(entry.duration) && Math.abs(entry.duration - durationSec) > lyricsSources.DURATION_TOLERANCE_SEC;
     const apiUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}`;
 
     const req1 = https.get(apiUrl, { headers: { 'User-Agent': 'devsize/2.0' }, timeout: 8000 }, (res) => {
@@ -5553,6 +5580,8 @@ function fetchLyricsDirect(title, artist) {
         try {
           if (res.statusCode === 200) {
             const parsed = JSON.parse(data);
+            // A different cut of the song (its length is off): look through the search results instead.
+            if (tooFar(parsed)) throw new Error('different version');
             if (parsed.instrumental) {
               return resolve({ instrumental: true, syncedLyrics: '', plainLyrics: '' });
             }
@@ -5570,7 +5599,7 @@ function fetchLyricsDirect(title, artist) {
           res2.on('end', () => {
             const data2 = decodeUtf8Chunks(chunks);
             try {
-              const list = JSON.parse(data2);
+              const list = lyricsSources.rankByDuration(JSON.parse(data2), durationSec);
               if (Array.isArray(list) && list.length > 0) {
                 if (list[0].instrumental) {
                   return resolve({ instrumental: true, syncedLyrics: '', plainLyrics: '' });
@@ -6188,6 +6217,7 @@ const TOKEN_PROTECTED_ROUTES = new Set([
   '/api/search',
   '/api/artist',
   '/api/lyrics',
+  '/api/lyrics-ttml',
   '/api/download',
   '/api/spotify-import',
   '/api/spotify-auth-start',
@@ -6261,7 +6291,7 @@ function isLyricsExplicit(lyrics) {
   return /\b(fuck|fucking|fucked|fucker|fucks|shit|bitch|bitches|bitching|asshole|cunt|nigger|nigga|dick|pussy)\b|ху[йеяёюи]|пизд|залуп|муда[кч]|мудил|г[ао]ндон|дерьм|дроч|(?:^|[^а-яё])(?:бля[а-яё]*|сук[аиуео]|суч[екьяа][а-яё]*)|(?:^|[^а-яё])(?:[её]б[а-яё]+|[её]б\b|(?:вы|за|на|до|по|пере|про|разъ|раз|съ|въ|под|от|у)[её]б[а-яё]*)/i.test(lyrics);
 }
 
-async function handleLyrics(req, res, title, artist, allowOnline = true, source = 'lrclib', duration = 0) {
+async function handleLyrics(req, res, title, artist, allowOnline = true, source = 'lrclib', duration = 0, album = '') {
   const normSource = source || 'lrclib';
   const cacheKey = `${artist || ''}:${title || ''}:${normSource}`.toLowerCase();
   let cached = lyricsCache.get(cacheKey);
@@ -6380,7 +6410,7 @@ async function handleLyrics(req, res, title, artist, allowOnline = true, source 
 
         
 
-        const lrcLib = await fetchLrcLib(title, artist);
+        const lrcLib = await fetchLrcLib(title, artist, { duration, album });
         if (lrcLib && lrcLib.instrumental) {
           return sendInstrumental();
         }
@@ -10338,7 +10368,28 @@ async function requestHandler(req, res) {
     const allowOnline = parsedUrl.query.online !== '0';
     const source = parsedUrl.query.source || 'lrclib';
     const duration = parseFloat(parsedUrl.query.duration) || 0;
-    return handleLyrics(req, res, title, artist, allowOnline, source, duration);
+    const album = parsedUrl.query.album || '';
+    return handleLyrics(req, res, title, artist, allowOnline, source, duration, album);
+  }
+
+  // Better Lyrics' word/syllable-timed TTML (lyrics-sources.js). Never fails the request: anything that
+  // goes wrong is { success: false, reason } and the renderer keeps the LRCLIB lyrics.
+  if (parsedUrl.pathname === '/api/lyrics-ttml') {
+    res.setHeader('Content-Type', 'application/json');
+    const reply = (body) => { res.writeHead(200); res.end(JSON.stringify(body)); };
+    if (parsedUrl.query.online === '0') return reply({ success: false, reason: 'offline' });
+    try {
+      const result = await lyricsSources.fetchBetterLyrics({
+        title: parsedUrl.query.title || '',
+        artist: parsedUrl.query.artist || '',
+        album: parsedUrl.query.album || '',
+        durationSec: parseFloat(parsedUrl.query.duration) || 0
+      });
+      if (result.status === 'ok') return reply({ success: true, source: 'betterlyrics', ttml: result.ttml });
+      return reply({ success: false, reason: result.status });
+    } catch (e) {
+      return reply({ success: false, reason: 'error' });
+    }
   }
 
   res.writeHead(404);

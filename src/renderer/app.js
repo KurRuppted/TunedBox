@@ -5854,6 +5854,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function fetchAndUpgradeWords(title, artist, trackId, token) {
     const wordSource = localStorage.getItem('riff_word_source') || 'auto';
     if (wordSource === 'estimate') return;
+    // Better Lyrics already timed every word of these lines.
+    const betterWords = () => state.lyricsBetterToken === token && state.lyricsBetterWordSynced;
+    if (betterWords()) return;
 
     const cachedWords = wordsSessionCache.get(trackId);
     if (cachedWords) {
@@ -5873,6 +5876,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const duration = (state.currentTrack && state.currentTrack.duration) || (el.nativeAudio && el.nativeAudio.duration) || 0;
       const res = await fetch(`http://127.0.0.1:${state.serverPort}/api/lyrics-words?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}&duration=${encodeURIComponent(duration || '')}`);
       const data = await res.json();
+      if (betterWords()) return;
 
       if (token !== state.loadToken || !state.currentTrack || (((state.currentTrack.id) || `${artist}:${title}`) !== trackId)) return;
       if (!data || !data.success || !data.lines || data.lines.length === 0) {
@@ -6044,6 +6048,107 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   window.showLyricsWarnToast = showLyricsWarnToast;
 
+  // ---------- Better Lyrics (word/syllable-timed TTML), preferred over LRCLIB ----------
+  // Asked for alongside Riff's own lookup (server.js /api/lyrics-ttml → lyrics-sources.js), parsed by
+  // lyrics-ttml.js. Only for Riff's default "LRCLIB" source with online lyrics allowed; a source picked
+  // in Settings, and custom lyrics, always win. If it hasn't answered within BETTER_WAIT_MS of Riff's
+  // lyrics, those show first and Better Lyrics replaces them when it arrives. Anything that goes wrong
+  // leaves Riff's lyrics as they are; none of this touches playback.
+  const betterLyricsSessionCache = new Map(); // trackId -> parsed result, or null when it has nothing usable
+  const BETTER_WAIT_MS = 1500;
+
+  /** Riff's line format from parsed TTML: an intro gap, and a gap wherever singing stops for 6s or more. */
+  function buildBetterLyricsLines(lines) {
+    const out = [];
+    if (lines.length && lines[0].time >= 6) out.push({ time: 0, text: '', isGap: true });
+    lines.forEach((line, i) => {
+      out.push(line);
+      const next = lines[i + 1];
+      if (next && next.time - line.endTime >= 6) out.push({ time: line.endTime, text: '', isGap: true });
+    });
+    return out;
+  }
+
+  async function fetchBetterLyricsLines(q, cacheKey) {
+    if (betterLyricsSessionCache.has(cacheKey)) return betterLyricsSessionCache.get(cacheKey);
+    if (!window.RiffTtml || typeof window.RiffTtml.parse !== 'function') return null;
+    let data = null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    try {
+      const res = await fetch(`http://127.0.0.1:${state.serverPort}/api/lyrics-ttml?title=${encodeURIComponent(q.title)}&artist=${encodeURIComponent(q.artist)}&album=${encodeURIComponent(q.album || '')}&duration=${encodeURIComponent(q.duration || '')}`, { signal: controller.signal });
+      data = await res.json();
+    } catch (e) {
+      return null; // network trouble or timeout: not remembered, so the next play asks again
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!data || !data.success || typeof data.ttml !== 'string') {
+      // Rate limited or a server error: ask again next time. A miss is remembered for this session.
+      if (data && data.reason === 'miss') betterLyricsSessionCache.set(cacheKey, null);
+      return null;
+    }
+    let result = null;
+    try {
+      const parsed = window.RiffTtml.parse(data.ttml);
+      result = { lines: buildBetterLyricsLines(parsed.lines), wordSynced: parsed.wordSynced, syllableSynced: parsed.syllableSynced };
+    } catch (e) {
+      console.warn('[lyrics] Better Lyrics TTML could not be read:', e && e.message);
+    }
+    betterLyricsSessionCache.set(cacheKey, result);
+    return result;
+  }
+
+  /** Shows Better Lyrics' lines in place of whatever is showing for this song. False if it's too late. */
+  function applyBetterLyrics(result, token, title) {
+    if (!result || !result.lines || !result.lines.length) return false;
+    if (token !== state.loadToken) return false;
+    if (state.currentTrack && (state.currentTrack.title || '') !== title) return false;
+    if (state.isCustomLyrics) return false;
+    try { if (syncState && syncState.active) return false; } catch (e) { /* sync mode not set up */ }
+    // Copies: Riff's tools (sync, edit) change lines in place, and the cached result must stay intact.
+    state.syncedLyrics = result.lines.map((l) => Object.assign({}, l, l.words ? { words: l.words.map((w) => Object.assign({}, w)) } : {}));
+    state.isCustomLyrics = false;
+    state.lyricsBetterToken = token;
+    state.lyricsBetterWordSynced = !!result.wordSynced;
+    state.tbLyricsStatus = 'ready';
+    showLyricsWarnToast(null);
+    if (el.lyricsStatus) el.lyricsStatus.textContent = 'Synced';
+    if (state.trEnabled && state.trAuto) {
+      state.trActive = true;
+      fetchAndApplyTranslation();
+    } else {
+      state.trActive = false;
+      state.currentTranslations = null;
+    }
+    updateLyricsTranslationUI();
+    renderLyricsView();
+    if (!isLyricsFullscreenOnly()) {
+      setRightPanelLyricsEmptySmooth(false);
+      const rpCreditsCard = document.getElementById('rp-credits-card');
+      if (rpCreditsCard) {
+        rpCreditsCard.classList.add('hidden');
+        rpCreditsCard.innerHTML = '';
+      }
+      const rpPanel = el.rightPanel || document.getElementById('right-panel');
+      if (rpPanel) rpPanel.classList.remove('has-credits');
+    } else if (state.currentTrack) {
+      updateRightPanelCredits(state.currentTrack);
+    }
+    if (el.lyricsContainer) {
+      el.lyricsContainer.style.opacity = '0';
+      requestAnimationFrame(() => {
+        el.lyricsContainer.style.transition = 'opacity 250ms cubic-bezier(0.2, 0, 0, 1)';
+        el.lyricsContainer.style.opacity = '1';
+      });
+    }
+    state.lastActiveLyricIdx = -1;
+    state.forceLyricsScroll = true;
+    state.forceSnapLyrics = true;
+    if (el.nativeAudio) updateSyncedLyricsHighlight(el.nativeAudio.currentTime || 0);
+    return true;
+  }
+
   async function loadSyncedLyrics(title, artist, token) {
     showLyricsWarnToast(null);
     if (el.lyricsContainer) {
@@ -6068,6 +6173,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const source = localStorage.getItem('riff_lyrics_source') || 'lrclib';
       const trackId = (state.currentTrack && state.currentTrack.id) || `${artist}:${title}`;
       const lyricsCacheKey = `${trackId}:${source}`;
+      const lyricsTrack = state.currentTrack;
+      const lyricsAlbum = lyricsTrack ? [lyricsTrack.album, lyricsTrack.albumName].find((a) => typeof a === 'string' && a.trim()) || '' : '';
+      const lyricsDuration = lyricsTrack && Number(lyricsTrack.duration) > 0 ? Number(lyricsTrack.duration) : 0;
+      const lyricsOnline = !(Boolean(lyricsTrack && (lyricsTrack.platform === 'local' || lyricsTrack.source === 'local' || String(lyricsTrack.id || '').startsWith('local_')))
+        || Boolean(lyricsTrack && isStaticTikTokTrack(lyricsTrack)) || !getAdv('online_lyrics', true));
+      state.lyricsBetterToken = null;
+      const betterPromise = source === 'lrclib' && lyricsOnline
+        ? fetchBetterLyricsLines({ title, artist, album: lyricsAlbum, duration: lyricsDuration }, trackId).catch(() => null)
+        : null;
 
       if (!lyricsSessionCache.has(lyricsCacheKey)) {
         setRightPanelLyricsEmptySmooth(true);
@@ -6082,7 +6196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
         try {
-          const res = await fetch(`http://127.0.0.1:${state.serverPort}/api/lyrics?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}&online=${onlineParam}&source=${encodeURIComponent(source)}${durationParam}`, { signal: controller.signal });
+          const res = await fetch(`http://127.0.0.1:${state.serverPort}/api/lyrics?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}&online=${onlineParam}&source=${encodeURIComponent(source)}${durationParam}${lyricsAlbum ? `&album=${encodeURIComponent(lyricsAlbum)}` : ''}`, { signal: controller.signal });
           data = await res.json();
           if (data && data.success && data.lyrics) {
             lyricsSessionCache.set(lyricsCacheKey, data);
@@ -6108,6 +6222,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           b.title = 'Explicit';
           b.textContent = 'E';
           activeRowArtistWrap.prepend(b);
+        }
+      }
+
+      if (betterPromise && !(data && data.success && data.isCustom)) {
+        const early = await Promise.race([betterPromise, new Promise((resolve) => setTimeout(() => resolve(undefined), BETTER_WAIT_MS))]);
+        if (token !== state.loadToken || (state.currentTrack && (state.currentTrack.title || '') !== title)) return;
+        if (early && applyBetterLyrics(early, token, title)) {
+          // Line-timed Better Lyrics can still pick up word timing from Riff's word source.
+          if (!early.wordSynced) fetchAndUpgradeWords(title, artist, trackId, token);
+          return;
+        }
+        // Not back yet: show Riff's lyrics now and switch when Better Lyrics arrives.
+        if (early === undefined) {
+          betterPromise.then((late) => {
+            if (late && applyBetterLyrics(late, token, title) && !late.wordSynced) fetchAndUpgradeWords(title, artist, trackId, token);
+          });
         }
       }
 
@@ -14916,6 +15046,7 @@ function renderClickableArtists(container, rawArtist, hintTrack = null) {
       for (const l of lines) if (l && Array.isArray(l.words) && l.words.length) worded++;
       const track = state.currentTrack;
       const key = [track ? track.id : '', lines.length, worded, state.isCustomLyrics ? 1 : 0, tr ? tr.length : 0,
+        state.lyricsBetterToken && state.lyricsBetterToken === state.loadToken ? 'bl' : '',
         state.tbLyricsStatus || '', state.lyricsMode || '', lines.length ? lines[0].text + lines[lines.length - 1].text : ''].join('|');
       if (this._cache && this._cache.key === key && this._cache.ref === lines && this._cache.tr === tr) return this._cache.data;
       const status = state.tbLyricsStatus || (lines.length ? 'ready' : 'none');
@@ -14935,13 +15066,20 @@ function renderClickableArtists(container, rawArtist, hintTrack = null) {
               const wt = typeof w === 'string' ? w : (w ? (w.word || w.text || '') : '');
               const ws = w && typeof w === 'object' ? (w.start !== undefined ? w.start : w.time) : undefined;
               const we = w && typeof w === 'object' ? (w.end !== undefined ? w.end : w.endTime) : undefined;
-              return { text: String(wt).trim(), start: Number.isFinite(ws) ? ws * 1000 : NaN, end: Number.isFinite(we) ? we * 1000 : NaN };
+              const word = { text: String(wt).trim(), start: Number.isFinite(ws) ? ws * 1000 : NaN, end: Number.isFinite(we) ? we * 1000 : NaN };
+              // Syllable timing (Better Lyrics): the sweep follows each syllable.
+              const syl = w && Array.isArray(w.syllables)
+                ? w.syllables.filter((x) => x && Number.isFinite(x.start) && Number.isFinite(x.end)).map((x) => ({ start: x.start * 1000, end: x.end * 1000, chars: Math.max(1, Number(x.chars) || 1) }))
+                : null;
+              if (syl && syl.length > 1) word.syllables = syl;
+              return word;
             }).filter((w) => w.text);
             if (!words.every((w) => Number.isFinite(w.start) && Number.isFinite(w.end))) words = null;
           }
           out.push({ start: start * 1000, next: getLineEndTime(i) * 1000, text, words, translation: tr && tr[i] ? String(tr[i]) : '' });
         }
-        data = { kind: 'synced', lines: out, wordSynced: out.some((l) => l.words), lineMode: state.lyricsMode === 'line', key };
+        data = { kind: 'synced', lines: out, wordSynced: out.some((l) => l.words), lineMode: state.lyricsMode === 'line', key,
+          source: state.lyricsBetterToken && state.lyricsBetterToken === state.loadToken ? 'betterlyrics' : 'riff' };
       }
       // Custom lyrics are matched a quarter second early, like Riff's own view.
       data.lead = state.isCustomLyrics ? 250 : 0;
@@ -14966,6 +15104,38 @@ function renderClickableArtists(container, rawArtist, hintTrack = null) {
       };
     }
   };
+
+  // UI tests only (a test profile sets riff_e2e_hooks): load lyrics as if the playing song were an online
+  // track with this title/artist/album/duration, so the Better Lyrics and LRCLIB lookups run against the
+  // test's fake services while a local file keeps playing. Never present for normal use.
+  try {
+    if (localStorage.getItem('riff_e2e_hooks') === '1') {
+      window.__riffLyricsTest = {
+        load(meta) {
+          if (!state.currentTrack || !meta || !meta.title) return false;
+          state.currentTrack = Object.assign({}, state.currentTrack, {
+            id: meta.id || `e2e_${meta.title}`, title: meta.title, artist: meta.artist || '', album: meta.album || '',
+            duration: Number(meta.duration) || 0, platform: 'ytmusic', source: 'ytmusic'
+          });
+          state.loadToken++;
+          loadSyncedLyrics(state.currentTrack.title, state.currentTrack.artist, state.loadToken);
+          return true;
+        },
+        source: () => (state.lyricsBetterToken && state.lyricsBetterToken === state.loadToken ? 'betterlyrics' : 'riff'),
+        lines: () => state.syncedLyrics,
+        // The line Riff's own view (updateSyncedLyricsHighlight) treats as current at `sec`.
+        riffLineAt(sec) {
+          const t = sec + (state.isCustomLyrics ? 0.25 : 0);
+          let found = null;
+          for (let i = 0; i < state.syncedLyrics.length; i++) {
+            const start = getLineStartTime(i);
+            if (start >= 0 && start <= t) found = state.syncedLyrics[i];
+          }
+          return found ? (found.isGap ? '' : found.text) : null;
+        }
+      };
+    }
+  } catch (e) { /* no test hooks */ }
 
   function renderQueueView() {
     updateQueueBadge();
