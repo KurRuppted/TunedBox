@@ -13161,7 +13161,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (track && track.artist) track.artist = stripYoutubeTopic(track.artist);
       applyTrackRenames(track);
       const row = document.createElement('div');
-      row.className = 'track-row';
+      // tb-odd / tb-even: the Tunebox striped list follows the song's place in the list, not the
+      // row's place among the rows currently drawn (renderTracks only draws rows near the screen).
+      row.className = `track-row ${idx % 2 ? 'tb-even' : 'tb-odd'}`;
       row._trackData = track;
       row.tabIndex = 0;
       const selKey = getTrackSelectionKey(track);
@@ -13480,7 +13482,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const itemHeight = document.body.classList.contains('track-rows-compact') ? 56 : 64;
+    // The Tunebox look sets the row height (rows plus the gap between them) as --tb-row-h on the list.
+    const cssRowHeight = parseFloat(getComputedStyle(container).getPropertyValue('--tb-row-h'));
+    const itemHeight = cssRowHeight > 0 ? cssRowHeight : (document.body.classList.contains('track-rows-compact') ? 56 : 64);
     const overscan = 15;
     
     function renderChunk() {

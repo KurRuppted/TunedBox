@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="tunebox/shell.css">
   <link rel="stylesheet" href="tunebox/player.css">
   <link rel="stylesheet" href="tunebox/home.css">
+  <link rel="stylesheet" href="tunebox/browse.css">
   <link rel="stylesheet" href="tunebox/panel.css">
   <script>document.documentElement.dataset.theme = 'dark';</script>
   <script>if (/Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '')) document.documentElement.classList.add('platform-darwin');</script>
@@ -819,7 +820,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
         <div class="playlist-recs-section hidden" id="favorites-recs-section"><div class="playlist-recs-header"><div><h3 class="playlist-recs-title" data-i18n>Recommended for you</h3><span class="playlist-recs-sub" data-i18n>Tracks we picked to add to your Liked Songs</span></div><button type="button" class="sp-quiet-icon-btn" id="btn-refresh-favorites-recs" title="Refresh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></button></div><div class="tracks-list" id="favorites-recs-list"></div></div>
       </section>
 
-      <section class="content-view" id="view-albums"><div class="search-albums-row" id="saved-albums-grid" style="flex-wrap: wrap;"></div></section>
+      <section class="content-view" id="view-albums"><h1 class="tb-page-title" data-i18n>Albums</h1><div class="search-albums-row" id="saved-albums-grid" style="flex-wrap: wrap;"></div></section>
 
       <section class="content-view" id="view-local">
         <div class="playlist-detail-header local-hero-header" id="local-playlist-header">
@@ -4777,5 +4778,6 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
   <script src="tunebox/shell.js"></script>
   <script src="tunebox/player.js"></script>
   <script src="tunebox/home.js"></script>
+  <script src="tunebox/browse.js"></script>
 </body>
 </html>

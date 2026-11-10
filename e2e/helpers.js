@@ -74,6 +74,18 @@ async function launchRiff({ width = 1600, height = 1000, maximize = false, seed 
   }, { width, height, maximize, pageCapture });
   await page.waitForTimeout(300);
   await page.waitForSelector('#playbar', { state: 'attached' });
+  // RIFF_HIDE_WINDOW keeps the window off the screen entirely (nothing appears over a game or other
+  // full-screen app). A window that's never shown draws no frames, so requestAnimationFrame callbacks
+  // (Riff switches pages in one) wait until the next capture, and CSS animations stay on their first
+  // frame (a page opening stays invisible). Run frame callbacks on a timer and finish animations at once.
+  if (process.env.RIFF_HIDE_WINDOW === '1') {
+    await page.evaluate(() => {
+      window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+    });
+    // A page closing stays on screen until its closing animation's end event, which never comes here.
+    await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important; } .content-view.leaving:not(.active) { display: none !important; }' });
+  }
   // The boot skeleton covers the UI until the app has started.
   await page.waitForSelector('#boot-skeleton', { state: 'hidden', timeout: 30_000 }).catch(() => {});
   return { app, page, profile };
@@ -102,6 +114,12 @@ async function closeRiff(ctx) {
 // RIFF_CAPTURE=page always uses the page capture: it never touches the screen or brings the window to
 // the front (use it while the computer is in use), but shows no Mica and no native caption buttons.
 async function capturePage(app, file) {
+  // A window that's never shown (RIFF_HIDE_WINDOW) hands back the last frame it drew and only then draws
+  // a new one, so capture once to bring the frame up to date, then capture for real.
+  if (process.env.RIFF_HIDE_WINDOW === '1') {
+    await app.evaluate(async ({ BrowserWindow }) => { await BrowserWindow.getAllWindows()[0].webContents.capturePage(); });
+    await new Promise((r) => setTimeout(r, 400));
+  }
   const png = await app.evaluate(async ({ BrowserWindow }) =>
     (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'));
   fs.writeFileSync(file, Buffer.from(png, 'base64'));

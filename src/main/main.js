@@ -446,7 +446,9 @@ function runGUI() {
 
     mainWindow.once('ready-to-show', () => {
       if (!mainWindow || mainWindow.isDestroyed()) return;
-      // Automated UI tests open the window without taking focus from whatever is in use.
+      // Automated UI tests open the window without taking focus from whatever is in use, or
+      // (RIFF_HIDE_WINDOW) never put it on screen at all; the page capture still works.
+      if (process.env.RIFF_HIDE_WINDOW === '1') return;
       if (process.env.RIFF_SHOW_INACTIVE === '1') mainWindow.showInactive();
       else mainWindow.show();
     });
