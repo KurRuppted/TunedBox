@@ -144,6 +144,9 @@ test('the full-screen lyrics button opens Tunebox Focus mode on Stage', async ()
   await expect(stage.locator('canvas.tb-stage-eq-bars')).toHaveCount(1);
   await expect(stage.locator('.tb-stage-frame i')).toHaveCount(44);
   await expect(page.locator('.tb-focus-dock')).toHaveCount(1);
+  // The dock's song bar and volume are plain Tunebox sliders: none of Riff's blue and gray pills behind them.
+  await expect(page.locator('.tb-focus-dock input[type=range]')).toHaveCount(2);
+  await expect(page.locator('.tb-focus-dock .sl, .tb-focus-dock .sl-active, .tb-focus-dock .sl-inactive')).toHaveCount(0);
 });
 
 test('Customize on Stage opens Tunebox\'s Stage settings', async () => {
@@ -166,7 +169,7 @@ test('the Appearance Lyrics tab sets the lyric font, colors and wheel', async ()
   await page.evaluate(() => window.Tunebox.appearancePanel.open('lyrics'));
   const sheet = page.locator('#tb-appearance');
   await expect(sheet).toBeVisible();
-  expect(await sheet.locator('.tb-sheet-tabs button').allTextContents()).toEqual(['Themes', 'General', 'Lyrics', 'Stage']);
+  expect(await sheet.locator('.tb-sheet-tabs button').allTextContents()).toEqual(['Themes', 'General', 'Home', 'Lyrics', 'Stage']);
   await expect(sheet.locator('.tb-sheet-tabs button.on')).toHaveText('Lyrics');
   await expect(sheet.locator('.tb-lyric-preview .tb-lp-sung')).toHaveText('Sung words glow');
   await expect(sheet.locator('.tb-lyric-preview .tb-stage-word.tb-gold')).toHaveText('highlight');

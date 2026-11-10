@@ -1,0 +1,23 @@
+/* Tunebox's Friends panel (2-app-shell/styles/app-shell.css), built by tunebox/friends.js.
+   A column at the window's right edge, after Riff's now-playing panel. */
+#tb body:not(.mini) .tb-friends-panel {
+  flex: none; position: relative; width: 288px; height: 100%; display: flex; flex-direction: column; min-height: 0;
+  background: var(--sidebar); border-left: 0.5px solid var(--separator); animation: tb-friends-in 0.25s var(--ease);
+  font-family: var(--font); color: var(--text); z-index: 1;
+}
+#tb.has-material body:not(.mini) .tb-friends-panel { background: var(--sidebar-material); }
+#tb body .tb-friends-panel[hidden], #tb body.mini .tb-friends-panel { display: none; }
+@keyframes tb-friends-in { from { opacity: 0; transform: translateX(16px); } }
+/* The Windows window buttons sit over this strip. */
+#tb .tb-friends-top { flex: none; height: var(--titlebar-h); -webkit-app-region: drag; }
+#tb .tb-friends-head { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 4px 16px; }
+#tb .tb-friends-head h2 { margin: 0; font-size: calc(17px * var(--fs, 1)); font-weight: 700; color: var(--text); }
+#tb .tb-friends-head .tb-friends-close { font-size: 20px; line-height: 1; color: var(--text-2); }
+#tb .tb-friends-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 8px; }
+#tb .tb-friends-empty { padding: 24px 12px; color: var(--text-2); text-align: center; line-height: 1.45; font-size: calc(13px * var(--fs, 1)); }
+#tb .tb-friends-empty b { color: var(--text); }
+#tb .tb-friends-empty p { margin: 6px 0 0; font-size: calc(12px * var(--fs, 1)); }
+
+/* Toolbar button: the last thing in the toolbar, shown while the panel is hidden. */
+#tb body:not(.mini) .top-nav #tb-toolbar-end > .tb-toolbar-friends[hidden] { display: none !important; }
+#tb body:not(.mini) .top-nav #tb-toolbar-end > .tb-toolbar-friends svg { width: 18px !important; height: 18px !important; }

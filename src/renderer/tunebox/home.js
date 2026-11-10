@@ -3,7 +3,8 @@
    - the greeting, with Edit Home and appearance buttons (they open Riff's matching settings)
    - the "Now Playing / Jump Back In" banner, mirroring Riff's player bar (window.tbRiff for the queue
      and lyrics)
-   - cover flow / grid / list views for Riff's rows, chosen per section and remembered */
+   - cover flow / grid / list views for Riff's rows, chosen per section and remembered
+   - the background chosen in Appearance → Home (Tunebox's HomeBackground), behind the whole page */
 (function () {
   'use strict';
 
@@ -112,6 +113,7 @@
       el.backdrop.style.backgroundImage = '';
     }
     setGlow(t.thumb);
+    syncBg();
     syncUpNext();
     syncTime();
   }
@@ -390,8 +392,71 @@
   }
   SHELVES.forEach(setupShelf);
 
+  // ---------- Background (Tunebox's components/HomeBackground.tsx) ----------
+  // Drawn behind Riff's scrolling page, so it stays put while Home scrolls: a layer just under
+  // #main-content, sized to it, with #main-content's own window colour turned off while it shows.
+  const main = $('main-content');
+  const bg = document.createElement('div');
+  bg.id = 'tb-home-bg';
+  bg.className = 'tb-home-bg';
+  bg.setAttribute('aria-hidden', 'true');
+  bg.hidden = true;
+  let bgLayer = null;
+  const bgDim = document.createElement('div');
+  bgDim.className = 'tb-home-bg-dim';
+  bg.appendChild(bgDim);
+  if (main && main.parentElement) main.parentElement.insertBefore(bg, main);
+  let bgKey = '';
+  function placeBg() {
+    if (bg.hidden || !main) return;
+    Object.assign(bg.style, { left: `${main.offsetLeft}px`, top: `${main.offsetTop}px`, width: `${main.offsetWidth}px`, height: `${main.offsetHeight}px` });
+  }
+  function syncBg() {
+    const A = window.Tunebox && window.Tunebox.appearance;
+    if (!A || !main || !bg.parentElement) return;
+    const look = A.get();
+    const gradient = (A.GRADIENTS || []).find((g) => g.id === look.background);
+    const t = riff() && riff().current();
+    const art = t && t.thumb;
+    const picture = A.backgroundImage && A.backgroundImage.get();
+    const url = (u) => `url("${String(u).replace(/"/g, '%22')}")`;
+    let kind = 'gradient';
+    let css = '';
+    if (gradient) css = gradient.css;
+    else if (look.background === 'artwork' && art) { kind = 'artwork'; css = url(art); }
+    else if (look.background === 'custom' && picture) { kind = 'photo'; css = url(picture); }
+    const search = $('discover-empty');
+    const show = !!css && isHome() && !body.classList.contains('mini') && !(search && search.classList.contains('hidden'));
+    bg.hidden = !show;
+    document.documentElement.classList.toggle('tb-home-bg-on', show);
+    if (!show) return;
+    bg.className = `tb-home-bg ${kind}`;
+    const key = `${kind}|${css}`;
+    if (key !== bgKey) {
+      // A new layer each time, so it fades in like Tunebox's (keyed) one.
+      bgKey = key;
+      if (bgLayer) bgLayer.remove();
+      bgLayer = document.createElement('div');
+      bgLayer.className = 'tb-home-bg-layer';
+      bgLayer.style.backgroundImage = css;
+      bg.insertBefore(bgLayer, bgDim);
+    }
+    // Fades pictures toward the window colour so text stays readable.
+    bgDim.style.opacity = String(kind === 'gradient' ? 0 : look.dim);
+    placeBg();
+  }
+  if (main) {
+    if (window.ResizeObserver) new ResizeObserver(placeBg).observe(main);
+    window.addEventListener('resize', placeBg);
+    new MutationObserver(syncBg).observe(body, { attributes: true, attributeFilter: ['class'] });
+    const search = $('discover-empty');
+    if (search) new MutationObserver(syncBg).observe(search, { attributes: true, attributeFilter: ['class'] });
+  }
+  if (window.Tunebox && window.Tunebox.appearance) window.Tunebox.appearance.subscribe(syncBg);
+
   // ---------- Coming back to Home ----------
   function onShow() {
+    syncBg();
     if (!isHome()) return;
     syncGreeting();
     syncTrack();

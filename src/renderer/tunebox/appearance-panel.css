@@ -199,3 +199,9 @@
 #tb .tb-sheet .tb-wheel-line { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: rgb(255 255 255 / 0.5); transform-origin: left center; transition: all 0.25s var(--ease); white-space: nowrap; }
 #tb .tb-sheet .tb-wheel-preview.center .tb-wheel-line { transform-origin: center; }
 #tb .tb-sheet .tb-wheel-line.active { color: #fff; }
+
+/* Home tab (Tunebox foundation.css) */
+#tb .tb-bg-preview.blurred { filter: saturate(1.4); background-size: 300%; }
+#tb .tb-sheet .tb-sheet-inline { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+#tb .tb-sheet .tb-dim-control { flex: 1; display: flex; align-items: center; gap: 10px; color: var(--text-2); }
+#tb .tb-sheet .tb-dim-control input { flex: 1; }

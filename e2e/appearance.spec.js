@@ -124,3 +124,49 @@ test('applying the Paper and Neon themes switches the font', async () => {
   expect(await fontFor('tunebox')).toContain('Inter Variable');
   await expect.poll(htmlTheme).toBe('dark');
 });
+
+test('the Appearance Home tab puts a background behind Home', async () => {
+  await page.evaluate(() => document.getElementById('nav-discover').click());
+  await expect(page.locator('#view-discover')).toHaveClass(/\bactive\b/);
+  await page.evaluate(() => window.Tunebox.appearancePanel.open('home'));
+  const sheet = page.locator('#tb-appearance');
+  await expect(sheet.locator('.tb-sheet-tabs button.on')).toHaveText('Home');
+  const gradients = await page.evaluate(() => window.Tunebox.appearance.GRADIENTS.map((g) => g.label));
+  expect(await sheet.locator('.tb-bg-tile > span:last-child').allTextContents()).toEqual(['None', ...gradients, 'Now Playing', 'My Picture']);
+  await expect(sheet.locator('.tb-sheet-note', { hasText: 'Edit Home' })).toHaveCount(1);
+
+  // A gradient: drawn under the whole page, the same size as it, and it stays put while Home scrolls.
+  const bg = page.locator('#tb-home-bg');
+  await sheet.locator('.tb-bg-tile').nth(1).click({ force: true });
+  await expect(bg).toBeVisible();
+  const rects = () => page.evaluate(() => {
+    const r = (e) => { const b = e.getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round); };
+    return { bg: r(document.getElementById('tb-home-bg')), main: r(document.getElementById('main-content')) };
+  });
+  let r = await rects();
+  expect(r.bg).toEqual(r.main);
+  expect(await page.evaluate(() => getComputedStyle(document.getElementById('main-content')).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+  expect(await bg.locator('.tb-home-bg-layer').evaluate((e) => e.style.backgroundImage)).toContain('gradient');
+  await page.evaluate(() => { document.getElementById('main-content').scrollTop = 300; });
+  expect((await rects()).bg).toEqual(r.main);
+
+  // My Picture: a chosen picture is stored and shown, faded by the Fade slider.
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64');
+  await sheet.locator('input[type=file]').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: png });
+  await expect.poll(() => page.evaluate(() => window.Tunebox.appearance.get().background)).toBe('custom');
+  await expect(bg).toHaveClass(/\bphoto\b/);
+  expect(await bg.locator('.tb-home-bg-layer').evaluate((e) => e.style.backgroundImage)).toContain('data:image/jpeg');
+  await expect(sheet.locator('.tb-bg-tile[data-bg="custom"]')).toHaveClass(/\bon\b/);
+  await sheet.locator('.tb-dim-control input').evaluate((i) => { i.value = '0.6'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await expect.poll(() => bg.locator('.tb-home-bg-dim').evaluate((e) => e.style.opacity)).toBe('0.6');
+
+  // Other pages don't get it; None takes it away and gives the page its window colour back.
+  await page.evaluate(() => document.getElementById('nav-queue').click());
+  await expect(bg).toBeHidden();
+  await page.evaluate(() => document.getElementById('nav-discover').click());
+  await expect(bg).toBeVisible();
+  await sheet.locator('.tb-bg-tile[data-bg="none"]').click({ force: true });
+  await expect(bg).toBeHidden();
+  expect(await page.evaluate(() => getComputedStyle(document.getElementById('main-content')).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
+  await page.evaluate(() => window.Tunebox.appearancePanel.close());
+});

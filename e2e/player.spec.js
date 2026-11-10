@@ -156,7 +156,9 @@ test('dock buttons still work', async () => {
     await expect.poll(panelOpen).toBe(open);
     await page.waitForTimeout(500);
   };
-  // With the panel open, the dock stays centred in what's left of the page.
+  // With the panel open, the dock stays centred in what's left of the page. Its slide is switched off:
+  // a hidden test window (RIFF_HIDE_WINDOW) doesn't run CSS transitions, so it would never arrive.
+  await page.addStyleTag({ content: '#tb body:not(.mini) #playbar#playbar { transition: none !important; }' });
   await setPanel(true);
   const box = await page.locator('#playbar').boundingBox();
   const col = await column();

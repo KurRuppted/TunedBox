@@ -86,7 +86,7 @@
   function SeekBar(className) {
     const el = make('div', 'tb-seek' + (className ? ' ' + className : ''));
     const cur = make('span', 'tb-seek-time', '0:00');
-    const input = make('input');
+    const input = make('input', 'sl-done'); // sl-done: Riff's slider code (enhanceSliders) leaves it as a plain Tunebox slider
     input.type = 'range';
     input.min = '0';
     input.setAttribute('aria-label', 'Song position');
@@ -120,7 +120,7 @@
     let lastLoud = 60;
     let vol = 100;
     const mute = button('tb-focus-icon', 'Mute', '', () => setVolume(vol === 0 ? lastLoud : 0));
-    const input = make('input');
+    const input = make('input', 'sl-done'); // sl-done: Riff's slider code (enhanceSliders) leaves it as a plain Tunebox slider
     input.type = 'range';
     input.min = '0';
     input.max = '100';

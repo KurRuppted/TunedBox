@@ -262,6 +262,9 @@
   let state = sanitize({});
   let album = null; // the playing cover's main colours, [[r,g,b], ...]
   let darkSurface = false;
+  // The picture for Home's "My Picture" background (lib/appearance.ts backgroundImage), as a data URL.
+  const IMAGE_KEY = 'tunebox.backgroundImage';
+  let image = null;
   const listeners = new Set();
   const emit = () => listeners.forEach((l) => { try { l(state); } catch (e) { console.warn('[tunebox] listener', e); } });
 
@@ -350,6 +353,7 @@
     init() {
       state = load();
       saved = loadSaved();
+      try { image = localStorage.getItem(IMAGE_KEY) || null; } catch (e) { image = null; }
       apply();
       emit();
     },
@@ -371,6 +375,29 @@
     setDarkSurface(on) { darkSurface = !!on; },
     get darkSurface() { return darkSurface; },
     coverColors,
+    backgroundImage: {
+      get: () => image,
+      /** Stores a picked picture, shrunk to at most 2400px wide as a JPEG so it fits in local storage. */
+      async setFromFile(file) {
+        const url = URL.createObjectURL(file);
+        try {
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          const scale = Math.min(1, 2400 / img.naturalWidth);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.naturalWidth * scale);
+          canvas.height = Math.round(img.naturalHeight * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const data = canvas.toDataURL('image/jpeg', 0.85);
+          localStorage.setItem(IMAGE_KEY, data);
+          image = data;
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+        appearance.set({ background: 'custom' });
+      }
+    },
     album: {
       get: () => album,
       set(colors) { album = colors; apply(); emit(); }

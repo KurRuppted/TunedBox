@@ -1,6 +1,6 @@
 /* Tunebox Appearance sheet (stage 7): a plain-JS port of Tunebox's AppearancePanel with its Themes,
-   General, Lyrics and Stage tabs. Everything it changes goes through window.Tunebox.appearance / .themes
-   (tunebox/appearance.js). Tunebox's Home tab is still to come. Opened from Home's
+   General, Home, Lyrics and Stage tabs. Everything it changes goes through window.Tunebox.appearance / .themes
+   (tunebox/appearance.js). Opened from Home's
    appearance button, Settings → Theme, and Focus mode's Customize chip on Stage.
    Exposed as window.Tunebox.appearancePanel.open(tab). Loaded after app.js. */
 (function () {
@@ -71,7 +71,9 @@
     const dark = themeLook.theme === 'dark' || (themeLook.theme === 'system' && A.isDark());
     const g = A.GRADIENTS.find((x) => x.id === themeLook.background);
     const art = artwork();
-    const bg = g ? g.css : themeLook.background === 'artwork' && art ? `url("${art}")` : 'none';
+    const picture = A.backgroundImage && A.backgroundImage.get();
+    const bg = g ? g.css : themeLook.background === 'artwork' && art ? `url("${art}")`
+      : themeLook.background === 'custom' && picture ? `url("${picture}")` : 'none';
     return h('span', {
       class: `tb-theme-preview ${dark ? 'dark' : 'light'} ${themeLook.background === 'artwork' ? 'blurred' : ''}`,
       '--tp-bg': bg, '--tp-accent': A.accentFor(themeLook, dark), style: { fontFamily: A.stackFor(themeLook.font, themeLook.customFont) }
@@ -182,6 +184,48 @@
       block('Text size', 'Double-click a slider to put it back to 100%.', reset,
         TEXT_SIZE_ROWS.map(([key, label, hint]) => sliderRow(label, hint, look.textSizes[key], A.TEXT_SIZE_MIN, A.TEXT_SIZE_MAX, 0.05, 1, percent,
           (v) => { A.set({ textSizes: Object.assign({}, A.get().textSizes, { [key]: v }) }); reset.disabled = Object.values(A.get().textSizes).every((x) => x === 1); })))
+    ];
+  }
+
+  // ---------- Home tab (Tunebox's components/appearance/HomeTab.tsx) ----------
+  function homeTab() {
+    const look = A.get();
+    const art = cover();
+    const custom = A.backgroundImage && A.backgroundImage.get();
+    const set = (patch) => { A.set(patch); render(); };
+    const file = h('input', { type: 'file', accept: 'image/*', hidden: true });
+    file.addEventListener('change', async () => {
+      const f = file.files && file.files[0];
+      file.value = '';
+      if (!f) return;
+      try { await A.backgroundImage.setFromFile(f); } catch (e) { toast('Couldn’t use that picture. Try a smaller JPG or PNG.'); }
+      render();
+    });
+    const tile = (id, label, preview, onclick, title) => h('button', {
+      type: 'button', class: `tb-bg-tile ${look.background === id ? 'on' : ''}`, 'data-bg': id, title, onclick
+    }, preview, h('span', {}, label));
+    const [dmin, dmax] = A.RANGES.dim;
+    const dim = h('input', { type: 'range', class: 'sl-done', min: dmin, max: dmax, step: 0.05, value: look.dim, '--fill': `${(look.dim / dmax) * 100}%` });
+    dim.addEventListener('input', () => {
+      const v = Number(dim.value);
+      dim.style.setProperty('--fill', `${(v / dmax) * 100}%`);
+      A.set({ dim: v });
+    });
+    return [
+      block('Home background', null, null,
+        h('div', { class: 'tb-bg-grid' },
+          tile('none', 'None', h('span', { class: 'tb-bg-preview plain' }), () => set({ background: 'none' })),
+          A.GRADIENTS.map((g) => tile(g.id, g.label, h('span', { class: 'tb-bg-preview', style: { backgroundImage: g.css } }), () => set({ background: g.id }))),
+          tile('artwork', 'Now Playing', h('span', { class: 'tb-bg-preview blurred', style: art ? { backgroundImage: `url("${art}")` } : null }),
+            () => set({ background: 'artwork' }), 'The cover of whatever is playing'),
+          tile('custom', 'My Picture', h('span', { class: 'tb-bg-preview', style: custom ? { backgroundImage: `url("${custom}")` } : null }, custom ? null : '+'),
+            () => (custom ? set({ background: 'custom' }) : file.click()))),
+        h('div', { class: 'tb-sheet-inline' },
+          h('button', { type: 'button', class: 'tb-btn tb-btn-ghost tb-btn-small', onclick: () => file.click() }, custom ? 'Choose Another Picture…' : 'Choose Picture…'),
+          file,
+          h('label', { class: 'tb-dim-control', title: 'Fades pictures so text stays easy to read' }, h('span', {}, 'Fade'), dim))),
+      h('p', { class: 'tb-sheet-note gap' }, 'To reorder or hide Home sections, or switch a section between cover flow, grid and list, use ',
+        h('b', {}, 'Edit Home'), ' at the top of the Home screen.')
     ];
   }
 
@@ -390,7 +434,7 @@
   }
 
   // ---------- Sheet ----------
-  const TABS = [['themes', 'Themes'], ['general', 'General'], ['lyrics', 'Lyrics'], ['stage', 'Stage']];
+  const TABS = [['themes', 'Themes'], ['general', 'General'], ['home', 'Home'], ['lyrics', 'Lyrics'], ['stage', 'Stage']];
   let tab = 'general';
   let backdrop = null;
   let panel = null;
@@ -405,7 +449,7 @@
       b.setAttribute('aria-selected', String(on));
     });
     if (stopPreview) stopPreview();
-    panel.replaceChildren(...(tab === 'themes' ? themesTab() : tab === 'stage' ? stageTab() : tab === 'lyrics' ? lyricsTab() : generalTab()));
+    panel.replaceChildren(...(tab === 'themes' ? themesTab() : tab === 'stage' ? stageTab() : tab === 'lyrics' ? lyricsTab() : tab === 'home' ? homeTab() : generalTab()));
     sheet.scrollTop = scroll;
   }
 

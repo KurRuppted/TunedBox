@@ -341,3 +341,13 @@
   #tb #view-discover .tb-shelf[data-view='flow'] .sp-row > * { transition: none !important; }
   #tb .tb-hero-lyric.tb-in, #tb .tb-flash { animation: none; }
 }
+
+/* ---------- Background (Appearance → Home; Tunebox browse.css .home-bg) ----------
+   tunebox/home.js puts it just under #main-content and sizes it to it, so it stays put while Home scrolls. */
+#tb .tb-home-bg { position: absolute; z-index: 9; overflow: hidden; pointer-events: none; background: var(--window); }
+#tb .tb-home-bg[hidden] { display: none; }
+#tb .tb-home-bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; animation: tb-home-bg-in 0.6s var(--ease); }
+#tb .tb-home-bg.artwork .tb-home-bg-layer { inset: -12%; filter: blur(70px) saturate(1.5); opacity: 0.85; }
+#tb .tb-home-bg-dim { position: absolute; inset: 0; background: var(--window); transition: opacity 0.2s; }
+@keyframes tb-home-bg-in { from { opacity: 0; } }
+#tb.tb-home-bg-on body:not(.mini) #main-content { background: transparent !important; }

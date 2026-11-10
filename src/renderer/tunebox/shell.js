@@ -90,11 +90,16 @@
   syncNowPlaying();
 
   // The toolbar stops where the right panel starts (Riff lets people resize the panel).
+  // The Friends panel (tunebox/friends.js) sits after it, and counts too.
   function syncPanelWidth() {
     const open = panel && !panel.classList.contains('hidden') && panel.offsetWidth > 0;
-    root.style.setProperty('--tb-right', open ? panel.offsetWidth + 'px' : '0px');
-    root.classList.toggle('tb-panel-open', !!open);
+    const friends = $('tb-friends');
+    const friendsW = friends && !friends.hidden ? friends.offsetWidth : 0;
+    const width = (open ? panel.offsetWidth : 0) + friendsW;
+    root.style.setProperty('--tb-right', width + 'px');
+    root.classList.toggle('tb-panel-open', width > 0);
   }
+  window.addEventListener('tb-panels-changed', syncPanelWidth);
   if (panel) {
     new ResizeObserver(syncPanelWidth).observe(panel);
     new MutationObserver(syncPanelWidth).observe(panel, { attributes: true, attributeFilter: ['class', 'style'] });
