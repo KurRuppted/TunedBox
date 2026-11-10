@@ -6061,6 +6061,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.forceSnapLyrics = true;
     state.syncedLyrics = [];
     state.isCustomLyrics = false;
+    state.tbLyricsStatus = 'loading';
     if (typeof renderMiniLyrics === 'function') renderMiniLyrics();
 
     try {
@@ -6119,6 +6120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         showLyricsWarnToast(typeof t === 'function' ? t('No lyrics found') : 'No lyrics found');
         setRightPanelLyricsEmptySmooth(true);
+        if (token === state.loadToken) state.tbLyricsStatus = 'none';
         return;
       }
 
@@ -6204,6 +6206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       state.syncedLyrics = parsed;
+      state.tbLyricsStatus = 'ready';
       if (el.lyricsStatus) el.lyricsStatus.textContent = data.isCustom ? (hasSyncTimes ? 'Custom synced' : 'Custom') : (hasSyncTimes ? 'Synced' : 'Plain');
       if (state.trEnabled && state.trAuto) {
         state.trActive = true;
@@ -6253,6 +6256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         updateLyricsBadge('no-lyrics');
         setRightPanelLyricsEmptySmooth(true);
+        state.tbLyricsStatus = 'none';
       }
     }
   }
@@ -8300,12 +8304,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Tunebox: the full-screen lyrics button opens Tunebox's Focus mode (tunebox/focus.js) instead.
+  const tbFocus = () => (window.Tunebox && window.Tunebox.focus) || null;
+
   function openTvKaraoke() {
     if (!el.tvKaraoke || !el.lyricsContainer) return;
     if (state.isTvKaraokeOpen) return;
     state.isTvKaraokeOpen = true;
     const btnPlaybarKaraoke = el.btnPlaybarKaraoke || document.getElementById('btn-playbar-karaoke');
     if (btnPlaybarKaraoke) btnPlaybarKaraoke.classList.toggle('active', state.isTvKaraokeOpen);
+    if (tbFocus()) { tbFocus().open(); return; }
 
     lyricsContainerParent = el.lyricsContainer.parentElement;
     lyricsContainerSibling = el.lyricsContainer.nextSibling;
@@ -8367,6 +8375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.isTvKaraokeOpen = false;
     const btnPlaybarKaraoke = el.btnPlaybarKaraoke || document.getElementById('btn-playbar-karaoke');
     if (btnPlaybarKaraoke) btnPlaybarKaraoke.classList.toggle('active', state.isTvKaraokeOpen);
+    if (tbFocus() && tbFocus().isOpen()) { tbFocus().close(); return; }
     syncTvkAmbientPlayback();
     clearTimeout(tvIdleTimer);
     if (tvkOutputInterval) {
@@ -14897,6 +14906,53 @@ function renderClickableArtists(container, rawArtist, hintTrack = null) {
       const end = getLineEndTime(idx);
       if (!text || (Number.isFinite(end) && time > end + 1.5)) return '♪';
       return text;
+    },
+    // For Tunebox's lyrics views (tunebox/lyrics-view.js): the loaded lyrics with times in ms.
+    // `key` changes whenever the lyrics, their word timing or translations change.
+    lyrics() {
+      const lines = Array.isArray(state.syncedLyrics) ? state.syncedLyrics : [];
+      const tr = state.trActive && Array.isArray(state.currentTranslations) ? state.currentTranslations : null;
+      let worded = 0;
+      for (const l of lines) if (l && Array.isArray(l.words) && l.words.length) worded++;
+      const track = state.currentTrack;
+      const key = [track ? track.id : '', lines.length, worded, state.isCustomLyrics ? 1 : 0, tr ? tr.length : 0,
+        state.tbLyricsStatus || '', state.lyricsMode || '', lines.length ? lines[0].text + lines[lines.length - 1].text : ''].join('|');
+      if (this._cache && this._cache.key === key && this._cache.ref === lines && this._cache.tr === tr) return this._cache.data;
+      const status = state.tbLyricsStatus || (lines.length ? 'ready' : 'none');
+      let data;
+      if (!lines.length) data = { kind: status === 'loading' ? 'loading' : 'none', key };
+      else if (lines.every((l) => !(l.time >= 0))) data = { kind: 'plain', text: lines.map((l) => l.text || '').join(String.fromCharCode(10)), key };
+      else {
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+          const start = getLineStartTime(i);
+          if (start < 0) continue;
+          const l = lines[i];
+          const text = l.isGap ? '' : String(l.text || '').replace(/<[^>]+>/g, '').trim();
+          let words = null;
+          if (!l.isGap && Array.isArray(l.words) && l.words.length) {
+            words = l.words.map((w) => {
+              const wt = typeof w === 'string' ? w : (w ? (w.word || w.text || '') : '');
+              const ws = w && typeof w === 'object' ? (w.start !== undefined ? w.start : w.time) : undefined;
+              const we = w && typeof w === 'object' ? (w.end !== undefined ? w.end : w.endTime) : undefined;
+              return { text: String(wt).trim(), start: Number.isFinite(ws) ? ws * 1000 : NaN, end: Number.isFinite(we) ? we * 1000 : NaN };
+            }).filter((w) => w.text);
+            if (!words.every((w) => Number.isFinite(w.start) && Number.isFinite(w.end))) words = null;
+          }
+          out.push({ start: start * 1000, next: getLineEndTime(i) * 1000, text, words, translation: tr && tr[i] ? String(tr[i]) : '' });
+        }
+        data = { kind: 'synced', lines: out, wordSynced: out.some((l) => l.words), lineMode: state.lyricsMode === 'line', key };
+      }
+      // Custom lyrics are matched a quarter second early, like Riff's own view.
+      data.lead = state.isCustomLyrics ? 250 : 0;
+      this._cache = { key, ref: lines, tr, data };
+      return data;
+    },
+    // Jump to `ms` in the song, the same way clicking one of Riff's lyric lines does.
+    seek(ms) {
+      if (!el.nativeAudio || !Number.isFinite(ms)) return;
+      el.nativeAudio.currentTime = Math.max(0, ms / 1000);
+      if (typeof updateSyncedLyricsHighlight === 'function') updateSyncedLyricsHighlight(el.nativeAudio.currentTime);
     },
     // The loaded song (playing or paused), or null.
     current() {
@@ -22687,6 +22743,9 @@ function bindCoverHoldZoom(wrapEl) {
   }
 
   function runKeyboardShortcut(event) {
+    // Tunebox's Focus mode has its own keys (Space, arrows, M, L, Esc); Riff's shortcuts step aside for those.
+    const tbFocusMode = window.Tunebox && window.Tunebox.focus;
+    if (tbFocusMode && tbFocusMode.isOpen() && tbFocusMode.handles(event)) return false;
     if (isTextInput(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey) return false;
     if (isTextInput(event.target) && /^Arrow/.test(event.code) &&
         (event.ctrlKey || event.metaKey || event.shiftKey)) return false;

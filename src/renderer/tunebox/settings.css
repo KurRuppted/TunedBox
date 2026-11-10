@@ -192,7 +192,7 @@
 
 /* ---------- Controls ---------- */
 /* Switch */
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn {
   position: relative !important;
   flex: none !important;
   width: 34px !important;
@@ -208,10 +208,10 @@
   transform: none !important;
   transition: background 0.2s !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn.active { background: var(--accent) !important; box-shadow: none !important; }
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn::before,
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn::after { display: none !important; }
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn .thumb {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn.active { background: var(--accent) !important; box-shadow: none !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn::before,
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn::after { display: none !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn .thumb {
   position: absolute !important;
   top: 2px !important;
   left: 2px !important;
@@ -225,20 +225,20 @@
   transform: none !important;
   transition: transform 0.2s var(--ease) !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn.active .thumb { transform: translateX(14px) !important; }
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn .thumb::before,
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn .thumb::after,
-#tb :is(#view-settings, .audio-menu-card) .effect-switch-btn .thumb svg { display: none !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn.active .thumb { transform: translateX(14px) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn .thumb::before,
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn .thumb::after,
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .effect-switch-btn .thumb svg { display: none !important; }
 
 /* Slider: Riff wraps each one in .sl (a filled bar, an empty bar, then the input on top). Tunebox's is a
    thin 4px track, filled to the value, with a round white knob. */
-#tb :is(#view-settings, .audio-menu-card) .sl { height: 20px !important; margin: 6px 0 2px !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl :is(.sl-active, .sl-inactive) { top: 8px !important; height: 4px !important; transition: none !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl .sl-active { left: 0 !important; width: calc((100% - 14px) * var(--v) + 7px) !important; border-radius: 2px 0 0 2px !important; background: var(--fill-strong) !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl .sl-inactive { right: 0 !important; width: calc(100% - ((100% - 14px) * var(--v) + 7px)) !important; border-radius: 0 2px 2px 0 !important; background: var(--fill-2) !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl input[type='range'] { height: 20px !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl input[type='range']::-webkit-slider-runnable-track { height: 20px !important; background: transparent !important; }
-#tb :is(#view-settings, .audio-menu-card) .sl input[type='range']::-webkit-slider-thumb {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl { height: 20px !important; margin: 6px 0 2px !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl :is(.sl-active, .sl-inactive) { top: 8px !important; height: 4px !important; transition: none !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl .sl-active { left: 0 !important; width: calc((100% - 14px) * var(--v) + 7px) !important; border-radius: 2px 0 0 2px !important; background: var(--fill-strong) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl .sl-inactive { right: 0 !important; width: calc(100% - ((100% - 14px) * var(--v) + 7px)) !important; border-radius: 0 2px 2px 0 !important; background: var(--fill-2) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl input[type='range'] { height: 20px !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl input[type='range']::-webkit-slider-runnable-track { height: 20px !important; background: transparent !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .sl input[type='range']::-webkit-slider-thumb {
   width: 14px !important;
   height: 14px !important;
   margin-top: 3px !important;
@@ -249,12 +249,12 @@
   transform: none !important;
 }
 /* Riff's tick marks under a slider: just the labels at the ends (and the default), small and quiet. */
-#tb :is(#view-settings, .audio-menu-card) .slider-ticks { height: 16px !important; margin-top: 0 !important; --thumb-w: 14px !important; }
-#tb :is(#view-settings, .audio-menu-card) .slider-ticks i { height: 0 !important; background: none !important; }
-#tb :is(#view-settings, .audio-menu-card) .slider-ticks i span { top: 0 !important; font-family: var(--font) !important; font-size: calc(11px * var(--fs, 1)) !important; color: var(--text-3) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .slider-ticks { height: 16px !important; margin-top: 0 !important; --thumb-w: 14px !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .slider-ticks i { height: 0 !important; background: none !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .slider-ticks i span { top: 0 !important; font-family: var(--font) !important; font-size: calc(11px * var(--fs, 1)) !important; color: var(--text-3) !important; }
 
 /* Riff's few-choice toggles (Light / Dark / System, interface font…): Tunebox's segmented control */
-#tb :is(#view-settings, .audio-menu-card) .theme-mode-toggle {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .theme-mode-toggle {
   display: inline-flex !important;
   align-self: flex-start !important;
   width: max-content !important;
@@ -266,7 +266,7 @@
   background: var(--fill) !important;
   box-shadow: none !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .theme-mode-btn {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .theme-mode-btn {
   height: auto !important;
   min-height: 0 !important;
   padding: 3px 16px !important;
@@ -280,13 +280,13 @@
   font-weight: 400 !important;
   transform: none !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .theme-mode-btn:hover:not(.active) { color: var(--text) !important; }
-#tb :is(#view-settings, .audio-menu-card) .theme-mode-btn.active { background: var(--window) !important; color: var(--text) !important; box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 0 0 0.5px var(--separator) !important; }
-#tb[data-theme='dark'] :is(#view-settings, .audio-menu-card) .theme-mode-btn.active { background: #5a5a5e !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .theme-mode-btn:hover:not(.active) { color: var(--text) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .theme-mode-btn.active { background: var(--window) !important; color: var(--text) !important; box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 0 0 0.5px var(--separator) !important; }
+#tb[data-theme='dark'] :is(#view-settings, .audio-menu-card, .tvk-panel) .theme-mode-btn.active { background: #5a5a5e !important; }
 
 /* Pop-up buttons (Riff's dropdowns) */
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-trigger,
-#tb :is(#view-settings, .audio-menu-card) .pill-select {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-trigger,
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .pill-select {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -305,12 +305,12 @@
   font-weight: 450 !important;
   transform: none !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-trigger:hover,
-#tb :is(#view-settings, .audio-menu-card) .pill-select:hover { background: var(--fill-2) !important; }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-trigger :is(.m3-dropdown-arrow, svg:last-child) { width: 14px !important; height: 14px !important; color: var(--text-2) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-trigger:hover,
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .pill-select:hover { background: var(--fill-2) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-trigger :is(.m3-dropdown-arrow, svg:last-child) { width: 14px !important; height: 14px !important; color: var(--text-2) !important; }
 
 /* Menus that open from them: Tunebox's frosted menu */
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-menu {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-menu {
   padding: 5px !important;
   border: 0 !important;
   border-radius: 9px !important;
@@ -319,7 +319,7 @@
   -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
   backdrop-filter: blur(30px) saturate(1.8) !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-option {
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-option {
   min-height: 24px !important;
   height: auto !important;
   padding: 3px 10px !important;
@@ -331,9 +331,9 @@
   font-size: calc(13px * var(--fs, 1)) !important;
   font-weight: 400 !important;
 }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-option:hover { background: var(--accent) !important; color: var(--on-accent) !important; }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-option.selected { color: var(--accent) !important; font-weight: 550 !important; }
-#tb :is(#view-settings, .audio-menu-card) .m3-dropdown-option.selected:hover { color: var(--on-accent) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-option:hover { background: var(--accent) !important; color: var(--on-accent) !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-option.selected { color: var(--accent) !important; font-weight: 550 !important; }
+#tb :is(#view-settings, .audio-menu-card, .tvk-panel) .m3-dropdown-option.selected:hover { color: var(--on-accent) !important; }
 
 /* Buttons: Tunebox ghost (grey) and primary (blue) */
 #tb :is(#view-settings, .audio-menu-card) :is(.btn-outline-pill, .btn-pill-primary, .acc-btn) {

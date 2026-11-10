@@ -19,6 +19,8 @@
   <link rel="stylesheet" href="tunebox/appearance-panel.css">
   <link rel="stylesheet" href="tunebox/overlays.css">
   <link rel="stylesheet" href="tunebox/panel.css">
+  <link rel="stylesheet" href="tunebox/now-playing.css">
+  <link rel="stylesheet" href="tunebox/lyrics.css">
   <script>document.documentElement.dataset.theme = 'dark';</script>
   <script>if (/Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || '')) document.documentElement.classList.add('platform-darwin');</script>
   <style id="tg-account-critical-css">
@@ -4484,7 +4486,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
     </div>
   </div>
 
-  <div class="tv-karaoke hidden" id="tv-karaoke">
+  <div class="tv-karaoke dark-surface hidden" id="tv-karaoke">
     <div class="tvk-top-hover-zone" id="tvk-top-hover-zone"></div>
     <div class="tvk-ambient-bg" id="tvk-ambient-bg">
       <div class="tvk-ambient-blob b1"></div>
@@ -4788,5 +4790,7 @@ body:not(.home-next-to-search) .bs-home-circle { display: none !important; }
   <script src="tunebox/browse.js"></script>
   <script src="tunebox/pages.js"></script>
   <script src="tunebox/appearance-panel.js"></script>
+  <script src="tunebox/lyrics-view.js"></script>
+  <script src="tunebox/focus.js"></script>
 </body>
 </html>

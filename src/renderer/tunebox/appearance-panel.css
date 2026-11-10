@@ -140,3 +140,38 @@
   #tb :is(.tb-sheet-backdrop, .tb-sheet, .tb-sheet-panel) { animation: none; }
   #tb .tb-sheet :is(.tb-switch, .tb-switch::after) { transition: none; }
 }
+
+/* ---------- Stage tab (Tunebox's StageTab.tsx; foundation.css rules with a tb- prefix) ---------- */
+#tb .tb-sheet-row.compact { padding: 6px 0; border-bottom: 0; }
+#tb .tb-sheet-note.gap { margin: 8px 0 0; }
+#tb .tb-eq-live {
+  position: relative; height: 150px; margin-bottom: 10px; border-radius: 10px; overflow: hidden;
+  background: #15151a center / cover; box-shadow: inset 0 0 0 0.5px rgb(255 255 255 / 0.08);
+}
+#tb .tb-eq-live::before { content: ''; position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+#tb .tb-eq-live .tb-stage-eq-bars, #tb .tb-eq-live .tb-stage-eq-glow { position: absolute; inset: 0; width: 100%; height: 100%; }
+#tb .tb-eq-live-off { position: absolute; inset: 0; display: grid; place-items: center; color: rgb(255 255 255 / 0.5); font-size: calc(12px * var(--fs, 1)); }
+#tb .tb-bg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+#tb .tb-bg-tile { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: calc(12px * var(--fs, 1)); color: var(--text-2); }
+#tb .tb-bg-tile.on { color: var(--text); }
+#tb .tb-bg-preview {
+  position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 8px;
+  background-color: var(--window); background-size: cover; background-position: center;
+  box-shadow: inset 0 0 0 0.5px var(--separator); font-size: calc(20px * var(--fs, 1)); color: var(--text-3);
+}
+#tb .tb-bg-tile:hover .tb-bg-preview { box-shadow: inset 0 0 0 0.5px var(--separator), 0 0 0 2px var(--fill-2); }
+#tb .tb-bg-tile.on .tb-bg-preview { box-shadow: 0 0 0 2px var(--accent); }
+#tb .tb-eq-preview { background-size: cover; }
+#tb .tb-eq-colors { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+#tb .tb-eq-color { position: relative; }
+#tb .tb-eq-swatch { display: block; width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 0.5px var(--separator), 0 2px 6px rgb(0 0 0 / 0.2); transition: box-shadow 0.15s; }
+#tb .tb-eq-swatch:hover { box-shadow: 0 0 0 0.5px var(--separator), 0 0 0 3px var(--fill-2); }
+#tb .tb-eq-remove {
+  position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center;
+  font-size: calc(11px * var(--fs, 1)); line-height: 1; background: var(--window); color: var(--text-2); box-shadow: 0 0 0 0.5px var(--separator), 0 1px 3px rgb(0 0 0 / 0.25);
+  opacity: 0; transition: opacity 0.12s;
+}
+#tb .tb-eq-color:hover .tb-eq-remove { opacity: 1; }
+#tb .tb-eq-add { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: calc(18px * var(--fs, 1)); color: var(--text-2); background: var(--fill); }
+#tb .tb-eq-add:hover { background: var(--fill-2); color: var(--text); }
+#tb .tb-eq-color .tb-color-input { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }

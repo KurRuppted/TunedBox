@@ -1,0 +1,168 @@
+/* Riff-specific additions for Tunebox's lyrics and Focus mode. The Tunebox styles themselves are in
+   tunebox/now-playing.css (a straight port); this file fits them into Riff:
+   - what Tunebox gets from its foundation stylesheet (button reset, sliders, shared keyframes);
+   - Focus mode above Riff's window frame, with Riff's lyric tools as chips and its Customize sheet;
+   - the right panel's lyrics (Tunebox's view, in the panel's light or dark colours);
+   - the text-size sliders (lyrics, Stage, clock) and Riff's Customize tweaks (size, weight, alignment). */
+
+/* ---------- From Tunebox's foundation stylesheet, scoped to the Tunebox screens ---------- */
+/* The button reset sits at the lowest priority (:where), so Tunebox's own button rules (chips, play…) win. */
+:where(#tb .tb-focus, #tb .tb-lyrics) button {
+  font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0;
+  box-shadow: none; cursor: default; min-width: 0; min-height: 0; height: auto; width: auto;
+  text-transform: none; letter-spacing: inherit;
+}
+:where(#tb .tb-focus, #tb .tb-lyrics) button:disabled { opacity: 0.35; }
+#tb .tb-focus img { display: block; }
+#tb .tb-focus :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 1px; border-radius: 6px; }
+#tb .tb-art-placeholder { display: block; background: linear-gradient(135deg, var(--fill-2), var(--fill)); }
+#tb .tb-focus input[type='range'] {
+  -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; flex: 1; margin: 8px 0; padding: 0;
+  border: 0; box-shadow: none; min-width: 0;
+  background: linear-gradient(to right, var(--fill-strong) var(--fill, 0%), var(--fill-2) var(--fill, 0%));
+}
+#tb .tb-focus input[type='range']::-webkit-slider-runnable-track { background: transparent; height: 4px; border: 0; }
+#tb .tb-focus input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: #fff; border: 0;
+  box-shadow: 0 0.5px 2px rgb(0 0 0 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.12);
+  opacity: 0; transition: opacity 0.12s;
+}
+#tb .tb-focus input[type='range']:hover::-webkit-slider-thumb,
+#tb .tb-focus input[type='range']:focus-visible::-webkit-slider-thumb { opacity: 1; }
+#tb .tb-focus input[type='range']:disabled { opacity: 0.4; }
+#tb .tb-repeat-one { position: absolute; top: 3px; right: 3px; font-size: calc(8px * var(--fs, 1)); font-weight: 700; }
+@keyframes tb-breathe { 50% { transform: scale(1.12); } }
+@keyframes tb-eq { from { transform: scaleY(0.25); } to { transform: scaleY(1); } }
+@keyframes tb-fade-in { from { opacity: 0; } }
+
+/* ---------- Focus mode in Riff ---------- */
+/* Above Riff's window frame, dock and panels; below Riff's dialogs (the lyrics editor, sync mode), which
+   its Edit and Sync chips open on top. */
+#tb .tb-focus { z-index: 99000; font-family: var(--font); color: #fff; user-select: none; }
+#tb .tb-focus-backdrop { filter: blur(var(--tb-backdrop-blur, 120px)) saturate(1.4) brightness(0.5); }
+#tb .tb-focus-top { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 220px); }
+#tb .tb-focus-chip { white-space: nowrap; }
+#tb .tb-focus-chip.tb-on { color: var(--accent); }
+#tb .tb-focus-icon.tb-liked { color: var(--accent); }
+#tb .tb-focus-icon svg, #tb .tb-focus-btn svg, #tb .tb-focus-play svg { display: block; }
+
+/* Text sizes (Appearance → text size): lyrics, Stage and the clock have their own sliders. */
+#tb .tb-lyrics { --fs: calc(var(--fs-lyrics, 1) * var(--tb-lyric-scale, 1)); }
+#tb .tb-stage { --fs: var(--fs-stage, 1); }
+#tb .tb-stage-clock { --fs: var(--fs-clock, 1); }
+
+/* Riff's Customize tweaks: weight and right alignment (Tunebox has left and centred) */
+#tb .tb-lyrics .tb-lyric-line:not(.tb-plain) { font-weight: var(--tb-lyric-weight, 700); }
+#tb .tb-lyrics.tb-right .tb-lyric-line { transform-origin: right center; text-align: right; }
+#tb .tb-lyrics.tb-right .tb-lyric-dots { justify-content: flex-end; }
+#tb .tb-lyrics.tb-right .tb-lyrics-sync { justify-content: flex-end; }
+
+/* Riff's translations, under each line */
+#tb .tb-lyric-translation {
+  margin-top: 6px; font-size: 0.5em; font-weight: 500; letter-spacing: -0.01em; line-height: 1.3;
+  color: color-mix(in srgb, var(--lyric-sung, #fff) 55%, transparent);
+}
+
+/* Riff's "Customize lyrics" sheet, under the Customize chip. The settings that only applied to Riff's own
+   karaoke screen (animation, visualizer) are hidden; the rest change the lyrics here. */
+#tb .tb-focus .tvk-panel {
+  position: absolute !important;
+  top: 64px !important; right: 28px !important; left: auto !important; bottom: auto !important;
+  width: 300px !important; max-height: calc(100vh - 160px); overflow-y: auto !important;
+  padding: 14px 16px !important; gap: 12px !important; z-index: 5 !important;
+  border: 0 !important; border-radius: 12px !important;
+  background: var(--menu) !important; color: var(--text) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important; backdrop-filter: blur(30px) saturate(1.8) !important;
+  clip-path: none !important;
+  transform: translateY(-6px) !important;
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease), visibility 0s linear 0.15s !important;
+  scrollbar-width: none;
+  font-family: var(--font) !important;
+}
+#tb .tb-focus .tvk-panel.open { transform: none !important; transition: opacity 0.15s var(--ease), transform 0.15s var(--ease), visibility 0s !important; animation: none !important; }
+#tb .tb-focus .tvk-panel::before, #tb .tb-focus .tvk-panel::after { display: none !important; }
+#tb .tb-focus .tvk-panel .tvk-panel-inner { display: flex; flex-direction: column; gap: 12px; padding: 0 !important; }
+#tb .tb-focus .tvk-panel .tvk-row:has(#tvk-anim-group, #tvk-speed, #btn-tvk-visualizer, #tvk-viz-style-dropdown, #btn-tvk-visualizer-lyrics, #tvk-vis-opacity) { display: none !important; }
+#tb .tvk-panel :is(.tvk-label, .tvk-val) {
+  font-family: var(--font) !important;
+  font-size: calc(13px * var(--fs, 1)) !important;
+  letter-spacing: 0 !important;
+}
+#tb .tvk-panel .tvk-label { font-weight: 450 !important; color: var(--text) !important; }
+#tb .tvk-panel .tvk-val { font-weight: 400 !important; color: var(--text-2) !important; font-variant-numeric: tabular-nums; }
+#tb .tvk-panel .tvk-pill-group {
+  gap: 0 !important; padding: 2px !important; border: 0 !important; border-radius: 8px !important;
+  background: var(--fill) !important; box-shadow: none !important;
+}
+#tb .tvk-panel .tvk-pill-btn {
+  min-height: 0 !important; height: 24px !important; padding: 0 10px !important; border: 0 !important; border-radius: 6px !important;
+  background: none !important; color: var(--text-2) !important; box-shadow: none !important; transform: none !important;
+  font-family: var(--font) !important; font-size: calc(12.5px * var(--fs, 1)) !important; font-weight: 400 !important;
+}
+#tb .tvk-panel .tvk-pill-btn:hover:not(.active) { color: var(--text) !important; }
+#tb .tvk-panel .tvk-pill-btn.active { background: #5a5a5e !important; color: var(--text) !important; box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 0 0 0.5px var(--separator) !important; }
+#tb .tvk-panel .tvk-pill-btn svg { width: 16px !important; height: 16px !important; }
+#tb .tvk-panel #btn-tvk-reset {
+  height: 28px !important; padding: 0 12px !important; border: 0 !important; border-radius: 7px !important;
+  background: var(--fill) !important; color: var(--text) !important; box-shadow: none !important;
+  font-family: var(--font) !important; font-size: calc(13px * var(--fs, 1)) !important; font-weight: 500 !important;
+}
+#tb .tvk-panel #btn-tvk-reset:hover { background: var(--fill-2) !important; }
+
+/* ---------- The right panel's lyrics: Tunebox's view ---------- */
+/* Riff keeps placing its own lyric lines (other parts of Riff read them); they're just not shown. */
+#tb body:not(.mini) #right-panel .lyrics-section.tb-lyrics-host > #lyrics-container { display: none !important; }
+#tb body:not(.mini) #right-panel .lyrics-section.tb-lyrics-host { position: relative; }
+#tb #right-panel .tb-lyrics {
+  flex: 1; min-height: 0; height: 100%;
+  /* Tunebox's lyrics are white on its always-dark screens; here they follow the panel's light or dark look.
+     Lyric colours chosen in Appearance (set on the element) still win. */
+  --lyric-sung: var(--text);
+  --lyric-unsung: color-mix(in srgb, var(--text) 32%, transparent);
+  --lyric-glow: var(--text);
+}
+#tb #right-panel .tb-lyrics-scroll { padding: 30% 4px 46%; }
+#tb #right-panel .tb-lyric-line { font-size: calc(24px * var(--fs, 1)); margin-bottom: calc(18px * var(--wheel-space, 1)); }
+#tb #right-panel .tb-lyric-line.tb-plain { font-size: calc(17px * var(--fs, 1)); }
+#tb #right-panel .tb-lyrics-status { color: var(--text-2); font-size: calc(14px * var(--fs, 1)); }
+#tb #right-panel .tb-lyrics-sync { color: var(--text-2); padding: 8px 4px 10px; }
+#tb #right-panel .tb-lyrics-sync button { background: var(--fill); color: var(--text-2); }
+#tb #right-panel .tb-lyrics-sync button:hover { background: var(--fill-2); color: var(--text); }
+#tb #right-panel .tb-lyrics-source { background: var(--fill); color: var(--text-2); }
+/* Controls appear on hover; the timing label stays visible (as on Tunebox's Now Playing). */
+#tb #right-panel .tb-lyrics .tb-lyrics-sync .tb-sync-group { opacity: 0; transition: opacity 0.3s; }
+#tb #right-panel .tb-lyrics:hover .tb-lyrics-sync .tb-sync-group { opacity: 1; }
+
+/* The lyric tools that appear over the panel on hover (Edit, Sync, Translate, Fullscreen, Word/Line) */
+#tb body:not(.mini) #right-panel .right-panel-header-actions {
+  gap: 2px !important;
+  padding: 4px !important;
+  border-radius: 10px !important;
+  background: var(--menu) !important;
+  box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important;
+  backdrop-filter: blur(30px) saturate(1.8) !important;
+}
+#tb body:not(.mini) #right-panel .lyrics-action-btn {
+  width: 30px !important; height: 30px !important; min-width: 30px !important; min-height: 30px !important;
+  border-radius: 7px !important; background: none !important; color: var(--text-2) !important;
+  box-shadow: none !important; transform: none !important;
+}
+#tb body:not(.mini) #right-panel .lyrics-action-btn:hover { background: var(--hover) !important; color: var(--text) !important; }
+#tb body:not(.mini) #right-panel .lyrics-action-btn.active { color: var(--accent) !important; }
+#tb body:not(.mini) #right-panel .lyrics-action-btn svg { width: 16px !important; height: 16px !important; }
+#tb body:not(.mini) #right-panel #btn-lyrics-mode.lyrics-mode-btn {
+  height: 24px !important; margin: 0 3px !important; padding: 0 9px !important; border: 0 !important; border-radius: 6px !important;
+  background: var(--fill) !important; color: var(--text) !important; box-shadow: none !important; opacity: 1 !important;
+  font-family: var(--font) !important; font-size: calc(12px * var(--fs, 1)) !important; font-weight: 550 !important;
+}
+#tb body:not(.mini) #right-panel #btn-lyrics-mode.lyrics-mode-btn:hover { background: var(--fill-2) !important; }
+
+/* "No lyrics found" and other lyric notices: a small frosted toast */
+#tb body:not(.mini) #lyrics-warn-badge {
+  padding: 7px 12px !important; border-radius: 8px !important;
+  background: var(--menu) !important; color: var(--text) !important; box-shadow: var(--shadow) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.8) !important; backdrop-filter: blur(30px) saturate(1.8) !important;
+  font-family: var(--font) !important; font-size: calc(12.5px * var(--fs, 1)) !important; font-weight: 500 !important;
+}

@@ -1,7 +1,7 @@
-/* Tunebox Appearance sheet (stage 7): a plain-JS port of Tunebox's AppearancePanel with its Themes and
-   General tabs. Everything it changes goes through window.Tunebox.appearance / .themes
-   (tunebox/appearance.js). Tunebox's Home, Lyrics and Stage tabs belong to features Riff doesn't have
-   yet, so they're left out. Opened from Home's appearance button and Settings → Theme.
+/* Tunebox Appearance sheet (stage 7): a plain-JS port of Tunebox's AppearancePanel with its Themes,
+   General and Stage tabs. Everything it changes goes through window.Tunebox.appearance / .themes
+   (tunebox/appearance.js). Tunebox's Home and Lyrics tabs are still to come. Opened from Home's
+   appearance button, Settings → Theme, and Focus mode's Customize chip on Stage.
    Exposed as window.Tunebox.appearancePanel.open(tab). Loaded after app.js. */
 (function () {
   'use strict';
@@ -185,8 +185,94 @@
     ];
   }
 
+  // ---------- Stage tab (Tunebox's components/appearance/StageTab.tsx) ----------
+  const VISUALIZER_MODES = [['rainbow', 'Rainbow'], ['accent', 'Accent'], ['artwork', 'Album Colors'], ['custom', 'Custom']];
+  const EQ_STYLES = [['bars', 'Bars'], ['wave', 'Wave'], ['blocks', 'Blocks'], ['off', 'Off']];
+  const SHAPE_KEYS = ['eqStyle', 'eqSize', 'eqHeight', 'eqSpeed', 'eqGlow', 'stageClock', 'stageQueue', 'stageSparkles'];
+  const EQ_RANGES = { eqSize: [2, 8, 4], eqHeight: [0.5, 2.5, 1], eqSpeed: [0.25, 2.5, 1], eqGlow: [0, 1.5, 0.9] };
+  const MAX_EQ_COLORS = 4;
+  const RAINBOW = 'linear-gradient(90deg, #ff3b30, #ff9500, #ffcc00, #34c759, #5ac8fa, #007aff, #af52de, #ff2d55)';
+  const cover = () => { const r = window.tbRiff && window.tbRiff.current(); return (r && r.thumb) || artwork(); };
+  function eqGradient(mode, look, art) {
+    if (mode === 'rainbow') return RAINBOW;
+    if (mode === 'accent') { const a = A.accentColor(true); return `linear-gradient(90deg, ${a}, color-mix(in srgb, ${a} 55%, white), ${a})`; }
+    if (mode === 'artwork') return art ? `url("${art}")` : 'linear-gradient(90deg, #888, #bbb)';
+    const list = look.eqColors.length === 1 ? [look.eqColors[0], look.eqColors[0]] : look.eqColors;
+    return `linear-gradient(90deg, ${list.join(', ')})`;
+  }
+
+  // The edge visualizer running in a small frame, with the current settings, so changes show straight away.
+  let stopPreview = null;
+  function visualizerPreview() {
+    const F = window.Tunebox && window.Tunebox.focus;
+    const art = cover();
+    const glow = h('canvas', { class: 'tb-stage-eq-glow', '--eq-glow': String(A.get().eqGlow) });
+    const bars = h('canvas', { class: 'tb-stage-eq-bars' });
+    const box = h('div', { class: 'tb-eq-live', style: art ? { backgroundImage: `url("${art}")` } : null }, glow, bars,
+      A.get().eqStyle === 'off' ? h('span', { class: 'tb-eq-live-off' }, 'Visualizer off') : null);
+    if (!F || !F.startEqualizer) return box;
+    let colors = null;
+    const look = A.get();
+    if (look.eqMode === 'accent') colors = F.withPartner(F.hexToRgb(A.accentColor(true)));
+    else if (look.eqMode === 'custom') colors = look.eqColors.length === 1 ? F.withPartner(F.hexToRgb(look.eqColors[0])) : look.eqColors.map(F.hexToRgb);
+    else if (look.eqMode === 'artwork' && art && A.coverColors) A.coverColors(art).then((c) => { colors = c; }, () => {});
+    const eq = F.startEqualizer(bars, glow, () => true, () => colors, () => {
+      const l = A.get();
+      return { style: l.eqStyle, size: l.eqSize, height: l.eqHeight, speed: l.eqSpeed, glow: l.eqGlow, reach: 0.16 };
+    });
+    // Pretend words are being sung, so the bars bounce like they do on Stage.
+    const beat = setInterval(() => eq.kick(), 430);
+    stopPreview = () => { clearInterval(beat); eq.stop(); stopPreview = null; };
+    return box;
+  }
+
+  function stageTab() {
+    const look = A.get();
+    const art = cover();
+    const D = A.DEFAULTS;
+    const changed = SHAPE_KEYS.some((k) => look[k] !== D[k]);
+    const set = (patch) => { A.set(patch); render(); };
+    const slider = (label, hint, key, step, format) => {
+      const [min, max, def] = EQ_RANGES[key];
+      return sliderRow(label, hint, look[key], min, max, step, def, format, (v) => {
+        A.set({ [key]: v });
+        if (key === 'eqGlow') panel.querySelectorAll('.tb-eq-live .tb-stage-eq-glow').forEach((g) => g.style.setProperty('--eq-glow', String(v)));
+      });
+    };
+    const colours = look.eqMode !== 'custom' ? null : h('div', { class: 'tb-eq-colors' },
+      look.eqColors.map((c, i) => {
+        const input = h('input', { type: 'color', class: 'tb-color-input', value: c, tabindex: '-1', 'aria-hidden': 'true' });
+        const swatch = h('button', { type: 'button', class: 'tb-eq-swatch', title: 'Change this color', style: { background: c }, onclick: () => input.click() });
+        input.addEventListener('input', () => { const list = A.get().eqColors.slice(); list[i] = input.value; A.set({ eqColors: list }); swatch.style.background = input.value; });
+        input.addEventListener('change', render);
+        return h('div', { class: 'tb-eq-color' }, swatch, input,
+          look.eqColors.length > 1 ? h('button', { type: 'button', class: 'tb-eq-remove', title: 'Remove this color', onclick: () => set({ eqColors: look.eqColors.filter((_, j) => j !== i) }) }, '×') : null);
+      }),
+      look.eqColors.length < MAX_EQ_COLORS ? h('button', { type: 'button', class: 'tb-eq-add', title: 'Add a color', onclick: () => set({ eqColors: look.eqColors.concat('#ffffff') }) }, '+') : null);
+    return [
+      block('Visualizer', 'The equalizer around the edge of Focus mode’s Stage layout.',
+        h('button', { type: 'button', class: 'tb-btn tb-btn-ghost tb-btn-small', disabled: !changed, onclick: () => set(Object.fromEntries(SHAPE_KEYS.map((k) => [k, D[k]]))) }, 'Reset'),
+        visualizerPreview(),
+        h('div', { class: 'tb-sheet-row compact' }, h('span', {}, 'Style'), segmented(look.eqStyle, EQ_STYLES, (eqStyle) => set({ eqStyle }))),
+        slider('Thickness', null, 'eqSize', 1, (v) => `${v} px`),
+        slider('Height', 'How far the bars reach in from the edge', 'eqHeight', 0.05, percent),
+        slider('Speed', 'How fast the waves and colors move around the frame', 'eqSpeed', 0.05, percent),
+        slider('Glow', null, 'eqGlow', 0.05, percent)),
+      block('Visualizer colors', null, null,
+        h('div', { class: 'tb-bg-grid' }, VISUALIZER_MODES.map(([mode, label]) => h('button', {
+          type: 'button', class: `tb-bg-tile ${look.eqMode === mode ? 'on' : ''}`, onclick: () => set({ eqMode: mode })
+        }, h('span', { class: 'tb-bg-preview tb-eq-preview', style: { backgroundImage: eqGradient(mode, look, art) } }), h('span', {}, label)))),
+        colours,
+        look.eqMode === 'artwork' && !art ? h('p', { class: 'tb-sheet-note gap' }, 'Play a song to use its cover’s colors.') : null),
+      block('Show on Stage', null, null,
+        toggleRow('Clock and date', null, look.stageClock, (stageClock) => set({ stageClock })),
+        toggleRow('Playing Next list', 'The tilted queue on the left. With it off, the lyrics move to the center.', look.stageQueue, (stageQueue) => set({ stageQueue })),
+        toggleRow('Sparkles', null, look.stageSparkles, (stageSparkles) => set({ stageSparkles })))
+    ];
+  }
+
   // ---------- Sheet ----------
-  const TABS = [['themes', 'Themes'], ['general', 'General']];
+  const TABS = [['themes', 'Themes'], ['general', 'General'], ['stage', 'Stage']];
   let tab = 'general';
   let backdrop = null;
   let panel = null;
@@ -200,7 +286,8 @@
       b.classList.toggle('on', on);
       b.setAttribute('aria-selected', String(on));
     });
-    panel.replaceChildren(...(tab === 'themes' ? themesTab() : generalTab()));
+    if (stopPreview) stopPreview();
+    panel.replaceChildren(...(tab === 'themes' ? themesTab() : tab === 'stage' ? stageTab() : generalTab()));
     sheet.scrollTop = scroll;
   }
 
@@ -223,7 +310,7 @@
   function onKey(e) { if (e.key === 'Escape') { e.stopPropagation(); close(); } }
   function open(which) {
     if (!backdrop) build();
-    if (which === 'themes' || which === 'general') tab = which;
+    if (TABS.some(([id]) => id === which)) tab = which;
     render();
     backdrop.hidden = false;
     document.addEventListener('keydown', onKey, true);
@@ -233,6 +320,7 @@
   function close() {
     if (!backdrop || backdrop.hidden) return;
     backdrop.hidden = true;
+    if (stopPreview) stopPreview();
     document.removeEventListener('keydown', onKey, true);
   }
 
