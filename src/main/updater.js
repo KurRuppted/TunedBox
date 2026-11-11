@@ -56,7 +56,14 @@ function initUpdater(getWindow) {
     if (isDownloadingAsset) return;
     isDownloadingAsset = true;
 
-    const mirrors = [assetUrl, `https://ghfast.top/${assetUrl}`, `https://ghp.ci/${assetUrl}`];
+    // Only ever download from GitHub itself. This file is executed as an installer, so
+    // it must not come from a third-party proxy, and nothing here verifies a signature.
+    if (!/^https:\/\/github\.com\/KurRuppted\/TunedBox\/releases\/download\//.test(String(assetUrl))) {
+      isDownloadingAsset = false;
+      if (typeof sendProgress === 'function') sendProgress('update-error', { message: 'Unexpected update URL' });
+      return;
+    }
+    const mirrors = [assetUrl];
     const tmpFile = path.join(os.tmpdir(), assetName);
     let downloaded = false;
 
@@ -75,7 +82,7 @@ function initUpdater(getWindow) {
         resetTimer();
         const res = await fetch(url, {
           signal: controller.signal,
-          headers: { 'User-Agent': 'Riff-Player' }
+          headers: { 'User-Agent': 'TunedBox-Player' }
         });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
@@ -120,7 +127,7 @@ function initUpdater(getWindow) {
     if (!downloaded) {
       isDownloadingAsset = false;
       if (typeof sendProgress === 'function') {
-        sendProgress('update-error', { message: 'Download failed from all mirrors' });
+        sendProgress('update-error', { message: 'Download failed' });
       }
       return;
     }
@@ -170,7 +177,7 @@ function initUpdater(getWindow) {
   const checkViaGithubApi = async () => {
     try {
       const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
-        headers: { 'User-Agent': 'Riff-Player' }
+        headers: { 'User-Agent': 'TunedBox-Player' }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
@@ -253,7 +260,7 @@ function initUpdater(getWindow) {
 
         try {
           const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
-            headers: { 'User-Agent': 'Riff-Player' }
+            headers: { 'User-Agent': 'TunedBox-Player' }
           });
           if (res.ok) {
             const json = await res.json();
