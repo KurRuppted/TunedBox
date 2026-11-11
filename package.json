@@ -1,6 +1,6 @@
 {
   "name": "tunedbox",
-  "version": "44.2.0",
+  "version": "44.2.1",
   "main": "src/main/main.js",
   "bin": {
     "tunedbox": "src/main/cli.js"
