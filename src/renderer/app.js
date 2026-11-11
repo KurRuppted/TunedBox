@@ -3002,15 +3002,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(() => {
     const audio = el.nativeAudio;
     if (!audioEngine || !audioEngine.getLevelDb || !audio || audio.paused || !state.isPlaying) return;
+    // getLevelDb reads the analyser and RMSes the whole buffer. Only pay for that when
+    // normalisation is actually on - otherwise the result was just thrown away, ten
+    // times a second, for the entire time anything was playing.
+    if (!normalizeEnabled()) {
+      if (levelAvgDb > -120) resetLevelWatcher();
+      return;
+    }
     const db = audioEngine.getLevelDb();
-    if (normalizeEnabled()) {
-      if (db > -50) {
-        levelAvgDb = levelAvgDb <= -120 ? db : levelAvgDb + (db - levelAvgDb) * 0.05;
-        const gainDb = Math.max(-9, Math.min(9, -17 - levelAvgDb));
-        audioEngine.setNormalizeGainDb(gainDb);
-      }
-    } else if (levelAvgDb > -120) {
-      resetLevelWatcher();
+    if (db > -50) {
+      levelAvgDb = levelAvgDb <= -120 ? db : levelAvgDb + (db - levelAvgDb) * 0.05;
+      const gainDb = Math.max(-9, Math.min(9, -17 - levelAvgDb));
+      audioEngine.setNormalizeGainDb(gainDb);
     }
   }, 100);
 
@@ -13607,9 +13610,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (container._vScrollHandler && scrollParent) {
       scrollParent.removeEventListener('scroll', container._vScrollHandler);
     }
-    
+
+    unobserveTitlesUnder(container);
     container.innerHTML = '';
-    
+
     if (!tracks || tracks.length === 0) {
       container.style.paddingTop = '0px';
       container.style.paddingBottom = '0px';
@@ -13628,8 +13632,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const itemHeight = cssRowHeight > 0 ? cssRowHeight : (document.body.classList.contains('track-rows-compact') ? 56 : 64);
     const overscan = 15;
     
-    function renderChunk() {
+    function renderChunk(fromScroll) {
       if (!scrollParent || container._isDraggingReorder) return;
+      // Every list that has ever rendered keeps a scroll handler on .main-content, so
+      // scrolling one view also re-measures and rebuilds the rows of every other
+      // (hidden) list. A hidden list measures as 0x0, so its chunk window keeps
+      // "changing" and it rebuilds on every scroll frame. Skip those: only the list
+      // being looked at can have scrolled. Direct calls still render while hidden
+      // (a view may be populated just before it is shown), and the cached window is
+      // dropped so the list re-measures for real once it is visible again.
+      if (fromScroll && container.offsetParent === null) {
+        container._lastStartIndex = -1;
+        container._lastEndIndex = -1;
+        return;
+      }
       const list = container._virtualTracks || tracks;
       const parentRect = scrollParent.getBoundingClientRect();
       const containerRect = container.getBoundingClientRect();
@@ -13658,20 +13674,23 @@ document.addEventListener('DOMContentLoaded', async () => {
          fragment.appendChild(row);
       }
       
+      unobserveTitlesUnder(container);
       container.innerHTML = '';
       container.style.paddingTop = `${startIndex * itemHeight}px`;
       container.style.paddingBottom = `${(list.length - endIndex) * itemHeight}px`;
       container.appendChild(fragment);
       container._hasInitialRendered = true;
       highlightPlayingRow();
+      // observeTitlesUnder measures and styles every title under the container and
+      // registers a ResizeObserver (which fires an initial callback) for anything that
+      // settles later, so a second refreshOverflowFades pass here is duplicate work.
       observeTitlesUnder(container);
-      refreshOverflowFades(container);
     }
     
     container._vScrollHandler = () => {
       if (!container._ticking) {
         window.requestAnimationFrame(() => {
-          renderChunk();
+          renderChunk(true);
           container._ticking = false;
         });
         container._ticking = true;
@@ -27878,12 +27897,26 @@ function bindCoverHoldZoom(wrapEl) {
 
   const titleOverflowSelector = '#right-panel-title, #right-panel-artist, #playbar-title, #playbar-artist, .sp-card-title, .sp-card-sub, .sp-tile-title, .sp-tile-sub, .sp-fade, .search-album-title, .track-row-title, .track-title-text, .playlist-item-name, .fav-artist-name, .my-wave-focused-title, .my-wave-focused-artist';
 
-  function updateTextFade(el) {
-    if (!el) return;
-    const over = el.scrollWidth > el.clientWidth + 1;
+  function applyTextFade(el, over) {
     el.classList.toggle('fade-end', over);
     el.classList.toggle('is-overflowing', over);
     el.classList.toggle('fade-overflow', over);
+  }
+
+  function updateTextFade(el) {
+    if (!el) return;
+    applyTextFade(el, el.scrollWidth > el.clientWidth + 1);
+  }
+
+  // Measuring one element then styling it, in a loop, forces a fresh layout per
+  // element. Read every width first, then write every class: one layout, not N.
+  function updateTextFades(els) {
+    const n = els.length;
+    if (!n) return;
+    if (n === 1) return updateTextFade(els[0]);
+    const over = new Array(n);
+    for (let i = 0; i < n; i++) over[i] = els[i].scrollWidth > els[i].clientWidth + 1;
+    for (let i = 0; i < n; i++) applyTextFade(els[i], over[i]);
   }
 
   function refreshOverflowFades(root = document) {
@@ -27892,15 +27925,28 @@ function bindCoverHoldZoom(wrapEl) {
       if (target.nodeType === 1 && target.matches && target.matches(titleOverflowSelector)) {
         updateTextFade(target);
       }
-      (target.querySelectorAll ? target : document).querySelectorAll(titleOverflowSelector).forEach(updateTextFade);
+      updateTextFades((target.querySelectorAll ? target : document).querySelectorAll(titleOverflowSelector));
     });
   }
 
   const titleOverflowObserver = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver((entries) => {
-    for (let i = 0; i < entries.length; i++) {
-      updateTextFade(entries[i].target);
+    const n = entries.length;
+    const over = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const t = entries[i].target;
+      over[i] = t.scrollWidth > t.clientWidth + 1;
     }
+    for (let i = 0; i < n; i++) applyTextFade(entries[i].target, over[i]);
   }) : null;
+
+  // Chromium holds observed elements strongly and re-measures every observation each
+  // frame, so virtualised rows that are thrown away while still observed accumulate
+  // forever and the page gets steadily slower the longer you scroll. Drop them first.
+  function unobserveTitlesUnder(root) {
+    if (!root || !titleOverflowObserver || !root.querySelectorAll) return;
+    const els = root.querySelectorAll(titleOverflowSelector);
+    for (let i = 0; i < els.length; i++) titleOverflowObserver.unobserve(els[i]);
+  }
 
   function observeTitlesUnder(root) {
     if (!root) return;
@@ -27910,9 +27956,9 @@ function bindCoverHoldZoom(wrapEl) {
     }
     if (root.querySelectorAll) {
       const els = root.querySelectorAll(titleOverflowSelector);
-      for (let i = 0; i < els.length; i++) {
-        updateTextFade(els[i]);
-        if (titleOverflowObserver) titleOverflowObserver.observe(els[i]);
+      updateTextFades(els);
+      if (titleOverflowObserver) {
+        for (let i = 0; i < els.length; i++) titleOverflowObserver.observe(els[i]);
       }
     }
   }
@@ -27926,9 +27972,23 @@ function bindCoverHoldZoom(wrapEl) {
         titleOverflowRaf = 0;
         const current = titleOverflowBatch;
         titleOverflowBatch = new Set();
+        // Gather titles across every batched subtree first, then measure them in one
+        // read/write pass. Calling observeTitlesUnder per node instead would force a
+        // separate layout per node, and virtualised scrolling batches dozens at a time.
+        const els = [];
         current.forEach(node => {
-          observeTitlesUnder(node);
+          if (!node.isConnected) return;
+          if (node.matches && node.matches(titleOverflowSelector)) els.push(node);
+          if (node.querySelectorAll) {
+            const found = node.querySelectorAll(titleOverflowSelector);
+            for (let i = 0; i < found.length; i++) els.push(found[i]);
+          }
         });
+        if (!els.length) return;
+        updateTextFades(els);
+        if (titleOverflowObserver) {
+          for (let i = 0; i < els.length; i++) titleOverflowObserver.observe(els[i]);
+        }
       });
     }
   }
@@ -27952,13 +28012,17 @@ function bindCoverHoldZoom(wrapEl) {
     }
   }).observe(document.body, { childList: true, subtree: true, characterData: true });
 
+  // resize fires continuously while the window edge is dragged, so coalesce to one
+  // batched measure per frame instead of a forced layout per title per event.
+  let titleResizeRaf = 0;
   window.addEventListener('resize', () => {
-    updateTextFade(el.rightPanelTitle);
-    updateTextFade(el.rightPanelArtist);
-    updateTextFade(el.playbarTitle);
-    updateTextFade(el.playbarArtist);
-    updateRightPanelTitleMarquee();
-    document.querySelectorAll(titleOverflowSelector).forEach(updateTextFade);
+    if (titleResizeRaf) return;
+    titleResizeRaf = requestAnimationFrame(() => {
+      titleResizeRaf = 0;
+      updateRightPanelTitleMarquee();
+      // The selector already covers the playbar and right-panel titles.
+      updateTextFades(document.querySelectorAll(titleOverflowSelector));
+    });
   });
 
   if (document.readyState === 'loading') {
