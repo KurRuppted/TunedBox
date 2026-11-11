@@ -5246,6 +5246,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
   }
 
+  // The prefetch dedup key is only a hint that a resolve is already done or in flight.
+  // Once the URL it produced is gone, drop the key too, so hovering the track again
+  // later can resolve it afresh instead of being skipped forever.
+  function forgetPrefetchKey(track) {
+    if (!track) return;
+    // prefetchedTrackKeys is a const declared further down, so reaching it before the
+    // script finishes evaluating would throw rather than read as undefined. The catch
+    // covers that as well as a missing canonical id.
+    try {
+      const k = (typeof getTrackCanonicalId === 'function')
+        ? getTrackCanonicalId(track)
+        : (track.id || track.url || (track.artist + '_' + track.title));
+      if (k) prefetchedTrackKeys.delete(k);
+    } catch (_) {}
+  }
+
   async function playTrack(track, queueList = null, startIndex = -1, context = null) {
     if (track) {
       track._retryCount = 0;
@@ -5254,30 +5270,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         track._hadNoDurationOnImport = true;
       }
       repairTikTokTrack(track);
-      let favChanged = false;
-      if (Array.isArray(state.favorites)) {
-        for (const f of state.favorites) {
-          if (repairTikTokTrack(f)) favChanged = true;
-        }
-        if (favChanged) {
-          try { localStorage.setItem('devsize_favorites', JSON.stringify(state.favorites)); } catch (_) {}
-        }
-      }
-      let plChanged = false;
-      if (Array.isArray(state.playlists)) {
-        for (const pl of state.playlists) {
-          if (Array.isArray(pl.tracks)) {
-            for (const pt of pl.tracks) {
-              if (repairTikTokTrack(pt)) plChanged = true;
-            }
-          }
-        }
-        if (plChanged) {
-          try { localStorage.setItem('devsize_playlists', JSON.stringify(state.playlists)); } catch (_) {}
-        }
-      }
+      // Repairing every favourite and every playlist track used to happen here, on each
+      // play, and could re-serialise both collections straight to localStorage before a
+      // single byte was requested. migrateAddedAt already does that same sweep once at
+      // startup, so this was pure duplicate work on the click path.
     }
     if (track && (!track._preloadedAt || (Date.now() - track._preloadedAt > 45000))) {
+      if (track._preloadedStreamUrl) forgetPrefetchKey(track);
       delete track._preloadedStreamUrl;
       delete track._preloadedStreamQuality;
       delete track._preloadedAt;
@@ -5499,6 +5498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const preloadedUrl = track._preloadedStreamUrl;
         delete track._preloadedStreamUrl;
         delete track._preloadedAt;
+        forgetPrefetchKey(track);
         if (currentToken !== state.loadToken) return;
         if (hlsInstance) {
           try { hlsInstance.destroy(); } catch (_) {}
@@ -12253,11 +12253,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     prefetchedTrackKeys.delete(key);
   }
 
-  function enqueueStreamPrefetch(track) {
+  function enqueueStreamPrefetch(track, warmBytes = false) {
     if (!track || track.platform === 'local' || isStaticTikTokTrack(track)) return;
-    if (track._preloadedStreamUrl) return;
     const key = getTrackCanonicalId ? getTrackCanonicalId(track) : (track.id || track.url || (track.artist + '_' + track.title));
-    if (!key || prefetchedTrackKeys.has(key)) return;
+    if (!key) return;
+    // playTrack throws away any URL resolved more than 45s ago, so a stale prefetch is
+    // worth redoing - drop it and its dedup key instead of reporting it as done.
+    if (track._preloadedStreamUrl && track._preloadedAt && Date.now() - track._preloadedAt > 40000) {
+      delete track._preloadedStreamUrl;
+      delete track._preloadedStreamQuality;
+      delete track._preloadedAt;
+      prefetchedTrackKeys.delete(key);
+    }
+    if (track._preloadedStreamUrl) return;
+    if (prefetchedTrackKeys.has(key)) return;
+    // Keys are only a dedup hint; anything still prefetched is caught by the check
+    // above, so dropping the set wholesale is safe and keeps it from growing forever.
+    if (prefetchedTrackKeys.size > 500) prefetchedTrackKeys.clear();
     prefetchedTrackKeys.add(key);
     streamPrefetchQueue.push({ key, run: () => {
       const quality = localStorage.getItem('riff_audio_quality') || 'medium';
@@ -12270,6 +12282,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (d && d.success && d.streamUrl) {
             track._preloadedStreamUrl = d.streamUrl;
             track._preloadedStreamQuality = quality;
+            // Without a timestamp playTrack treats the URL as expired and discards it,
+            // which silently wasted every prefetch this queue ever resolved.
+            track._preloadedAt = Date.now();
+            // Pull the first chunk through the proxy so the connection to the CDN is
+            // already open when the audio element asks for it.
+            if (warmBytes) warmUpNextAudioBuffer(d.streamUrl);
           } else {
             prefetchedTrackKeys.delete(key);
           }
@@ -12278,6 +12296,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     } });
     pumpStreamPrefetch();
   }
+
+  // A click is almost always preceded by the pointer coming to rest on the row, so
+  // treat a short hover as intent and resolve the stream URL then. By the time the
+  // click lands, playTrack takes its preloaded fast path instead of paying for a cold
+  // resolve. Delegated from the document so virtualised rows cost nothing to set up.
+  const HOVER_PREFETCH_DELAY = 150;
+  let hoverPrefetchTimer = 0;
+  let hoverPrefetchRow = null;
+
+  function cancelHoverPrefetch() {
+    if (hoverPrefetchTimer) {
+      clearTimeout(hoverPrefetchTimer);
+      hoverPrefetchTimer = 0;
+    }
+    hoverPrefetchRow = null;
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const row = e.target && e.target.closest ? e.target.closest('.track-row') : null;
+    if (!row || row === hoverPrefetchRow) return;
+    cancelHoverPrefetch();
+    const track = row._trackData;
+    // Cached, downloaded and local tracks already start instantly.
+    if (!track || track.isCached || track.platform === 'local' || isStaticTikTokTrack(track)) return;
+    hoverPrefetchRow = row;
+    hoverPrefetchTimer = setTimeout(() => {
+      hoverPrefetchTimer = 0;
+      if (hoverPrefetchRow !== row || !row.isConnected) return;
+      enqueueStreamPrefetch(track, true);
+    }, HOVER_PREFETCH_DELAY);
+  }, { passive: true });
+
+  document.addEventListener('mouseout', (e) => {
+    const row = e.target && e.target.closest ? e.target.closest('.track-row') : null;
+    if (row && row === hoverPrefetchRow) cancelHoverPrefetch();
+  }, { passive: true });
 
   function prefetchVisibleTracks(tracks) {
     if (!Array.isArray(tracks) || !tracks.length) return;
