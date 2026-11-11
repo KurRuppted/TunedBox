@@ -18,10 +18,10 @@ const {
 } = require('./google-oauth');
 const { fetchYouTubeLibrary } = require('./youtube-data');
 const RFACC_KEY = crypto.createHash('sha256').update('riff-account-key-v1').digest();
-const APP_ID = 'io.github.rootscripts.riff';
+const APP_ID = 'io.github.KurRuppted.tunedbox';
 const IS_MAC = process.platform === 'darwin';
 
-app.setName('Riff');
+app.setName('TunedBox');
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
 function encryptAccount(dataObj) {
@@ -420,7 +420,7 @@ function runGUI() {
       minWidth: 800,
       minHeight: 540,
                                    backgroundColor: tbChrome.material ? '#00000000' : (firstRun ? '#8d5ef2' : '#1f1f1f'),
-                                   title: 'Riff',
+                                   title: 'TunedBox',
                                    icon: path.join(__dirname, '../../assets', 'icon.png'),
                                    frame: IS_MAC || tbChrome.nativeControls,
                                    titleBarStyle: IS_MAC ? 'hiddenInset' : 'hidden',
@@ -2337,7 +2337,7 @@ function runGUI() {
           let trayIcon = nativeImage.createFromPath(iconPath);
           trayIcon = trayIcon.resize({ width: 22, height: 22 });
           tray = new Tray(trayIcon);
-          tray.setToolTip('Riff');
+          tray.setToolTip('TunedBox');
           const contextMenu = Menu.buildFromTemplate([
             {
               label: 'Show/Hide',

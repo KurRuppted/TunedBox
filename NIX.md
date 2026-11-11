@@ -1,5 +1,7 @@
 # Riff on Nix
 
+> **Note:** this file and `flake.nix` describe the Nix packaging as inherited from the upstream [Riff](https://github.com/rootscripts/riff) project. They have not been adapted for the TunedBox fork (package name, flake output names, and the `github:rootscripts/riff` input below still point at upstream Riff). If you package TunedBox for Nix, update these first — don't assume they already point here.
+
 The `flake.nix` exposes three things:
 
 - `packages.riff` (also `packages.default`) — the installable app

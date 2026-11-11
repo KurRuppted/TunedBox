@@ -27,3 +27,6 @@ e2e/.results/
 e2e/screenshots/
 test-results/
 playwright-report/
+
+# graphify knowledge-graph output (not part of the app)
+graphify-out/

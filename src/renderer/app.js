@@ -1160,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const rawArtist = (typeof current.artist === 'string' ? current.artist.trim() : '');
       const title = rawTitle || 'Unknown track';
       const artist = rawArtist || 'Unknown artist';
-      const album = current.album || 'Riff';
+      const album = current.album || 'TunedBox';
       const thumb = (typeof getTrackThumbUrl === 'function' ? getTrackThumbUrl(current) : '') || current.thumbnail || current.cover || '';
       const artwork = getMediaArtwork(thumb);
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -6826,10 +6826,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       'Display name': 'Отображаемое имя',
       'Reset avatar': 'Сбросить аватар',
       'Account backup (.rfacc)': 'Резервная копия аккаунта (.rfacc)',
-      'Export Riff account (.rfacc)': 'Экспорт аккаунта Riff (.rfacc)',
-      'Import Riff account (.rfacc)': 'Импорт аккаунта Riff (.rfacc)',
+      'Export TunedBox account (.rfacc)': 'Экспорт аккаунта TunedBox (.rfacc)',
+      'Import TunedBox account (.rfacc)': 'Импорт аккаунта TunedBox (.rfacc)',
       'Save your profile, playlists, favorites, history, and settings to a file': 'Сохраните профиль, плейлисты, избранное, историю и настройки в файл',
-      'Restore your entire Riff account from a .rfacc backup file': 'Восстановите весь аккаунт Riff из файла резервной копии .rfacc',
+      'Restore your entire TunedBox account from a .rfacc backup file': 'Восстановите весь аккаунт TunedBox из файла резервной копии .rfacc',
       'Connected services & integrations': 'Подключённые сервисы и интеграции',
       'Manage Spotify, YouTube, Last.fm, Yandex Music, and Discord RPC': 'Управление Spotify, YouTube, Last.fm, Яндекс Музыкой и Discord RPC',
       'Open Integrations': 'Открыть интеграции',
@@ -6994,10 +6994,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       'Display name': 'Імʼя користувача',
       'Reset avatar': 'Скинути аватар',
       'Account backup (.rfacc)': 'Резервна копія акаунту (.rfacc)',
-      'Export Riff account (.rfacc)': 'Експорт акаунту Riff (.rfacc)',
-      'Import Riff account (.rfacc)': 'Імпорт акаунту Riff (.rfacc)',
+      'Export TunedBox account (.rfacc)': 'Експорт акаунту TunedBox (.rfacc)',
+      'Import TunedBox account (.rfacc)': 'Імпорт акаунту TunedBox (.rfacc)',
       'Save your profile, playlists, favorites, history, and settings to a file': 'Збережіть профіль, плейлісти, улюблене, історію та налаштування у файл',
-      'Restore your entire Riff account from a .rfacc backup file': 'Відновіть увесь акаунт Riff з файлу резервної копії .rfacc',
+      'Restore your entire TunedBox account from a .rfacc backup file': 'Відновіть увесь акаунт TunedBox з файлу резервної копії .rfacc',
       'Connected services & integrations': 'Підключені сервіси та інтеграції',
       'Manage Spotify, YouTube, Last.fm, Yandex Music, and Discord RPC': 'Керування Spotify, YouTube, Last.fm, Яндекс Музикою та Discord RPC',
       'Open Integrations': 'Відкрити інтеграції',
@@ -12956,7 +12956,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       items.push({
         id: 'remove-local',
         danger: true,
-        label: 'Remove from Riff',
+        label: 'Remove from TunedBox',
         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>',
         action: () => {
           removeTracksFromLocalLibrary([track]);
@@ -21399,7 +21399,7 @@ function bindCoverHoldZoom(wrapEl) {
     document.querySelectorAll(`style[data-plugin="${p.file}"]`).forEach((n) => n.remove());
     const hadStop = !!(entry && entry.stop);
     loadedPlugins.delete(p.file);
-    if (!silent && !hadStop) showToast(`Restart Riff to fully unload "${p.name}"`, 'info');
+    if (!silent && !hadStop) showToast(`Restart TunedBox to fully unload "${p.name}"`, 'info');
   }
   let pluginsCache = [];
   function renderPluginCards() {
@@ -21699,7 +21699,7 @@ function bindCoverHoldZoom(wrapEl) {
       const btnConfirm = document.getElementById('btn-confirm-spotify-import');
       if (btnConfirm) btnConfirm.click();
     }
-    showToast('Welcome to Riff!', 'info');
+    showToast('Welcome to TunedBox!', 'info');
   }
   if (window.electronAPI && window.electronAPI.onWelcomeResult) window.electronAPI.onWelcomeResult((d) => applyWelcomeResult(d));
 
@@ -22536,7 +22536,7 @@ function bindCoverHoldZoom(wrapEl) {
     const originalBtnHtml = btn ? btn.innerHTML : 'Check for updates';
     let manualUpdateCheck = false;
     let checkTimeoutId = null;
-    let fallbackReleaseUrl = 'https://github.com/rootscripts/riff/releases/latest';
+    let fallbackReleaseUrl = 'https://github.com/KurRuppted/TunedBox/releases/latest';
     let canNativeInstall = false;
 
     let latestUpdateInfo = null;
@@ -22659,13 +22659,13 @@ function bindCoverHoldZoom(wrapEl) {
           showToast('Could not check for updates', 'error');
           return;
         }
-        const res = await fetch('https://api.github.com/repos/rootscripts/riff/releases/latest', {
-          headers: { 'User-Agent': 'Riff-Player' }
+        const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
+          headers: { 'User-Agent': 'TunedBox-Player' }
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const json = await res.json();
         const latestVersion = (json.tag_name || '').replace(/^v/i, '');
-        fallbackReleaseUrl = json.html_url || 'https://github.com/rootscripts/riff/releases/latest';
+        fallbackReleaseUrl = json.html_url || 'https://github.com/KurRuppted/TunedBox/releases/latest';
         if (isNewerVersion(latestVersion, currentAppVersion)) {
           latestUpdateInfo = {
             version: latestVersion,
@@ -22678,7 +22678,7 @@ function bindCoverHoldZoom(wrapEl) {
           restoreButton();
         } else {
           restoreButton();
-          showToast('You are using the latest version of Riff!', 'success');
+          showToast('You are using the latest version of TunedBox!', 'success');
         }
       } catch (err) {
         restoreButton();
@@ -22728,8 +22728,8 @@ function bindCoverHoldZoom(wrapEl) {
 
         if (!hasImg || !hasPublishedAt) {
           try {
-            const res = await fetch('https://api.github.com/repos/rootscripts/riff/releases/latest', {
-              headers: { 'User-Agent': 'Riff-Player' }
+            const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
+              headers: { 'User-Agent': 'TunedBox-Player' }
             });
             if (res.ok) {
               const gh = await res.json();
@@ -22778,7 +22778,7 @@ function bindCoverHoldZoom(wrapEl) {
         const wasManual = manualUpdateCheck;
         restoreButton();
         if (wasManual) {
-          showToast('You are using the latest version of Riff!', 'success');
+          showToast('You are using the latest version of TunedBox!', 'success');
         }
       });
     }
@@ -25821,7 +25821,7 @@ function bindCoverHoldZoom(wrapEl) {
     btnImportJsonPlaylists.addEventListener('click', triggerJsonPlaylistImport);
   }
 
-  function confirmChain({ title = 'Import Riff account', message = 'Importing an account will replace your existing playlists, favorites, custom styles, and settings. Riff will restart immediately.', confirmLabel = 'Import & Restart', seconds = 3 } = {}) {
+  function confirmChain({ title = 'Import TunedBox account', message = 'Importing an account will replace your existing playlists, favorites, custom styles, and settings. TunedBox will restart immediately.', confirmLabel = 'Import & Restart', seconds = 3 } = {}) {
     return new Promise((resolve) => {
       let modal = document.getElementById('confirm-chain-modal');
       if (!modal) {
@@ -25911,8 +25911,8 @@ function bindCoverHoldZoom(wrapEl) {
   if (btnImportAccount) {
     btnImportAccount.onclick = async () => {
       const confirmed = await confirmChain({
-        title: 'Import Riff account',
-        message: 'Importing an account will replace your existing playlists, favorites, custom styles, and settings. Riff will restart immediately.',
+        title: 'Import TunedBox account',
+        message: 'Importing an account will replace your existing playlists, favorites, custom styles, and settings. TunedBox will restart immediately.',
         confirmLabel: 'Import & Restart',
         seconds: 3
       });
@@ -30260,7 +30260,7 @@ function bindCoverHoldZoom(wrapEl) {
       }
       const move = window.confirm(
         'Move your existing music to the new folder?\n\n' +
-        'OK: move all downloaded and imported files, then restart Riff.\n' +
+        'OK: move all downloaded and imported files, then restart TunedBox.\n' +
         'Cancel: switch to the new folder without moving (files stay in the old one).'
       );
       btnChangeMusicFolder.disabled = true;
@@ -30280,7 +30280,7 @@ function bindCoverHoldZoom(wrapEl) {
         return;
       }
       btnChangeMusicFolder.textContent = 'Restarting...';
-      showToast('Restarting Riff...');
+      showToast('Restarting TunedBox...');
       setTimeout(() => { if (window.electronAPI.restartApp) window.electronAPI.restartApp(); }, 400);
     });
   }

@@ -34,7 +34,7 @@ function initUpdater(getWindow) {
   if (pkg.version) {
     app.setVersion(pkg.version);
   }
-  const releasesUrl = `${pkg.homepage || 'https://github.com/rootscripts/riff'}/releases`;
+  const releasesUrl = `${pkg.homepage || 'https://github.com/KurRuppted/TunedBox'}/releases`;
   let manualCheck = false;
   let installNow = false;
   let current = null;
@@ -169,7 +169,7 @@ function initUpdater(getWindow) {
 
   const checkViaGithubApi = async () => {
     try {
-      const res = await fetch('https://api.github.com/repos/rootscripts/riff/releases/latest', {
+      const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
         headers: { 'User-Agent': 'Riff-Player' }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -252,7 +252,7 @@ function initUpdater(getWindow) {
         let htmlUrl = `${releasesUrl}/tag/v${info.version}`;
 
         try {
-          const res = await fetch('https://api.github.com/repos/rootscripts/riff/releases/latest', {
+          const res = await fetch('https://api.github.com/repos/KurRuppted/TunedBox/releases/latest', {
             headers: { 'User-Agent': 'Riff-Player' }
           });
           if (res.ok) {

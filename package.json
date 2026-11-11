@@ -1,9 +1,9 @@
 {
-  "name": "riff",
+  "name": "tunedbox",
   "version": "44.2.0",
   "main": "src/main/main.js",
   "bin": {
-    "riff": "src/main/cli.js"
+    "tunedbox": "src/main/cli.js"
   },
   "scripts": {
     "start": "electron .",
@@ -15,9 +15,9 @@
     "test:ui": "playwright test e2e/playback.spec.js e2e/appearance.spec.js e2e/shell.spec.js e2e/player.spec.js e2e/home.spec.js e2e/lyrics.spec.js e2e/friends.spec.js e2e/better-lyrics.spec.js"
   },
   "keywords": [],
-  "author": "rootscripts",
+  "author": "KurRuppted",
   "license": "MIT",
-  "description": "made for humans, Riff - audio player.",
+  "description": "made for humans, TunedBox - audio player. A Tunebox-styled fork of Riff.",
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@fontsource-variable/fraunces": "^5.3.0",
@@ -34,18 +34,18 @@
     "hls.js": "^1.7.1",
     "tone": "^15.1.22"
   },
-  "productName": "Riff",
-  "homepage": "https://github.com/rootscripts/riff",
+  "productName": "TunedBox",
+  "homepage": "https://github.com/KurRuppted/TunedBox",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rootscripts/riff.git"
+    "url": "git+https://github.com/KurRuppted/TunedBox.git"
   },
   "bugs": {
-    "url": "https://github.com/rootscripts/riff/issues"
+    "url": "https://github.com/KurRuppted/TunedBox/issues"
   },
   "build": {
-    "appId": "io.github.rootscripts.riff",
-    "productName": "Riff",
+    "appId": "io.github.KurRuppted.tunedbox",
+    "productName": "TunedBox",
     "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist"
@@ -112,8 +112,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "rootscripts",
-        "repo": "riff",
+        "owner": "KurRuppted",
+        "repo": "TunedBox",
         "releaseType": "release"
       }
     ],
