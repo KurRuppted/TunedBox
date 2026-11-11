@@ -12338,7 +12338,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     tracks
       .filter(track => track && track.platform === 'soundcloud')
       .slice(0, SEARCH_STREAM_PREFETCH_LIMIT)
-      .forEach(enqueueStreamPrefetch);
+      .forEach(t => enqueueStreamPrefetch(t));
+  }
+
+  // The first few results are the likeliest clicks, so resolve them as soon as a search
+  // lands. The prefetch queue keeps at most STREAM_PREFETCH_MAX requests in flight, and
+  // performSearch clears anything still queued from the previous search.
+  const SEARCH_TOP_PREFETCH_COUNT = 3;
+  function prefetchTopSearchResults(tracks) {
+    if (!Array.isArray(tracks)) return;
+    tracks
+      .filter(t => t && t.platform !== 'local')
+      .slice(0, SEARCH_TOP_PREFETCH_COUNT)
+      .forEach(t => enqueueStreamPrefetch(t, true));
   }
 
   function setSearchIconCover(thumb) {
@@ -12419,7 +12431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const firstThumb = data.tracks.length ? getTrackThumbUrl(data.tracks[0]) : '';
       setSearchIconCover(firstThumb);
       recordSearchQuery(query, firstThumb);
-      prefetchVisibleTracks(data.tracks);
+      prefetchTopSearchResults(data.tracks);
 
       requestAnimationFrame(() => {
         if (el.searchTracksList) {
